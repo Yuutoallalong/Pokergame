@@ -1,23 +1,45 @@
 package src.main.java.com.pokerproject.common;
-// Card class
 
 import src.main.java.com.pokerproject.server.GameState;
 
-public class Card {
-    private Suit suit;
-    private Rank rank;
-    // Getters, setters, toString, etc.
-}
+public class Card implements Comparable<Card>{
+    private final Rank rank;
+    private final Suit suit;
+    
+    public Card(Rank rank, Suit suit) {
+        this.rank = rank;
+        this.suit = suit;
+    }
 
+    public Rank getRank() {
+        return rank;
+    }
 
+    public Suit getSuit() {
+        return suit;
+    }
 
+    @Override
+    public String toString() {
+        return rank.toString() + suit.getSymbol();
+    }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Card card = (Card) obj;
+        return rank == card.rank && suit == card.suit;
+    }
 
-// Game class
-public class Game {
-    private List<Player> players;
-    private Deck deck;
-    private int pot;
-    private GameState state;
-    // Game logic methods
+    @Override
+    public int hashCode() {
+        return 31 * rank.hashCode() + suit.hashCode();
+    }
+
+    @Override
+    public int compareTo(Card other) {
+        //use to order card by rank
+        return Integer.compare(this.rank.getValue(), other.rank.getValue());
+    }
 }
