@@ -1,5 +1,4 @@
 package src.main.java.com.pokerproject.common;
-// Deck class
 
 public class Deck {
     private List<Card> cards;
