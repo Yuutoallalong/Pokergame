@@ -1,12 +1,17 @@
 package com.pokerproject.app;
 
 import java.awt.CardLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Image;
 import java.io.IOException;
 
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -16,6 +21,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
 import com.google.gson.Gson;
+import com.pokerproject.model.Card;
 import com.pokerproject.model.Game;
 import com.pokerproject.model.Player;
 import com.pokerproject.server.ClientSocket;
@@ -334,48 +340,58 @@ public class AppGUI {
     private JPanel createGamePage() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBackground(new Color(34, 45, 65)); // Dark poker table theme
 
         JLabel tableLabel = new JLabel("Poker Game");
+        tableLabel.setForeground(Color.WHITE);
         if (currentGame != null) {
             tableLabel = new JLabel("Poker Game - " + currentGame.getGameId());
             tableLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-            tableLabel.setFont(tableLabel.getFont().deriveFont(18.0f));
+            tableLabel.setFont(tableLabel.getFont().deriveFont(22.0f).deriveFont(Font.BOLD));
+            tableLabel.setForeground(Color.ORANGE);
         }
 
-        // ======= Community Cards (5 Cards Mock) =======
+        // ======= Community Cards =======
         JPanel communityPanel = new JPanel();
+        communityPanel.setBackground(new Color(34, 45, 65));
         communityPanel.setLayout(new BoxLayout(communityPanel, BoxLayout.X_AXIS));
-        communityPanel.add(new JLabel("[🂠]")); // Card Back Placeholder
-        communityPanel.add(Box.createHorizontalStrut(10));
-        communityPanel.add(new JLabel("[🂠]"));
-        communityPanel.add(Box.createHorizontalStrut(10));
-        communityPanel.add(new JLabel("[🂠]"));
-        communityPanel.add(Box.createHorizontalStrut(10));
-        communityPanel.add(new JLabel("[🂠]"));
-        communityPanel.add(Box.createHorizontalStrut(10));
-        communityPanel.add(new JLabel("[🂠]"));
+        if (currentGame != null) {
+            for (int i = 0; i < 5; i++) {
+                JLabel cardLabel = new JLabel();
+                cardLabel.setIcon(loadCardImage(null)); // Default back
+                communityPanel.add(cardLabel);
+                communityPanel.add(Box.createHorizontalStrut(10));
+            }
+        }
+
         communityPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // ======= Player Slots =======
         JPanel playersPanel = new JPanel();
         playersPanel.setLayout(new BoxLayout(playersPanel, BoxLayout.Y_AXIS));
+        playersPanel.setBackground(new Color(34, 45, 65));
+
         if (currentGame != null) {
-            System.out.println("currentGame: " + currentGame);
-            for (int i = 1; i <= currentGame.getPlayers().size(); i++) {
-                Player player = currentGame.getPlayers().get(i - 1);
-                System.out.println(player);
+            for (Player player : currentGame.getPlayers()) {
                 JPanel playerRow = new JPanel();
+                playerRow.setBackground(new Color(44, 55, 75));
                 playerRow.setLayout(new BoxLayout(playerRow, BoxLayout.X_AXIS));
+                playerRow.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
                 JLabel playerLabel = new JLabel("Player " + player.getName() + ": ");
-                JLabel card1 = new JLabel("[🂠]");
-                JLabel card2 = new JLabel("[🂠]");
+                playerLabel.setForeground(Color.WHITE);
+                playerLabel.setFont(playerLabel.getFont().deriveFont(Font.PLAIN, 14f));
+
+                JLabel card1 = new JLabel(loadCardImage(null));
+                JLabel card2 = new JLabel(loadCardImage(null));
+
                 JLabel chips = new JLabel("Chips: " + player.getChips());
+                chips.setForeground(Color.GREEN);
 
                 playerRow.add(playerLabel);
-                playerRow.add(Box.createHorizontalStrut(5));
+                playerRow.add(Box.createHorizontalStrut(10));
                 playerRow.add(card1);
-                playerRow.add(Box.createHorizontalStrut(5));
+                playerRow.add(Box.createHorizontalStrut(10));
                 playerRow.add(card2);
                 playerRow.add(Box.createHorizontalGlue());
                 playerRow.add(chips);
@@ -384,12 +400,23 @@ public class AppGUI {
                 playersPanel.add(Box.createVerticalStrut(10));
             }
         }
+
         // ======= Action Buttons =======
         JPanel buttonPanel = new JPanel();
+        buttonPanel.setBackground(new Color(34, 45, 65));
+
         JButton callButton = new JButton("Call");
         JButton foldButton = new JButton("Fold");
         JButton raiseButton = new JButton("Raise");
         JButton exitGameButton = new JButton("Exit game");
+
+        JButton[] buttons = {callButton, foldButton, raiseButton, exitGameButton};
+        for (JButton btn : buttons) {
+            btn.setBackground(new Color(70, 130, 180));
+            btn.setForeground(Color.WHITE);
+            btn.setFocusPainted(false);
+            btn.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
+        }
 
         buttonPanel.add(callButton);
         buttonPanel.add(foldButton);
@@ -399,17 +426,10 @@ public class AppGUI {
         // ======= Back Button Action =======
         exitGameButton.addActionListener(e -> {
             if (currentGame != null && currentPlayerName != null) {
-                // ส่ง leave message
                 client.sendMessage("LEAVE_GAME:" + currentPlayerName + ":" + currentGame.getGameId());
-
-                // หยุด listening thread
                 stopListeningFromServer();
-
-                // รีเซ็ต state
                 currentGame = null;
                 currentPlayerName = null;
-
-                // กลับไปหน้า menu
                 cardLayout.show(mainPanel, "Menu");
             }
         });
@@ -427,5 +447,27 @@ public class AppGUI {
 
         return panel;
     }
+
+// ======= Load Card Image Helper =======
+    private ImageIcon loadCardImage(Card card) {
+        String path;
+        if (card == null) {
+            path = "/images/cards/2_of_clubs.png";  // default card
+        } else {
+            String rank = card.getRank().toString().toLowerCase();
+            String suit = card.getSuit().toString().toLowerCase();
+            path = "/images/cards/" + rank + "_of_" + suit + ".png";
+        }
+
+        try {
+            Image img = new ImageIcon(getClass().getResource(path)).getImage().getScaledInstance(60, 90, Image.SCALE_SMOOTH);
+            return new ImageIcon(img);
+        } catch (Exception e) {
+            System.err.println("Error loading image: " + path);
+            return new ImageIcon(); // fallback เป็น icon เปล่า
+        }
+    }
+
+
 
 }
