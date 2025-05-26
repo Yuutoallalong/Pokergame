@@ -14,8 +14,10 @@ public class Player {
     private boolean isBigBlind;
     private boolean isActive; //current player
     private transient ClientHandler handler;
+
+    public boolean isCreater;
     
-    public Player(String name, ClientHandler handler) {
+    public Player(String name, ClientHandler handler, boolean isCreater) {
         this.name = name;
         this.handler = handler;
         this.chips = 1000;
@@ -24,6 +26,7 @@ public class Player {
         this.isSmallBlind = false;
         this.isBigBlind = false;
         this.isActive = true;
+        this.isCreater = isCreater;
     }
 
     public ClientHandler getHandler() {

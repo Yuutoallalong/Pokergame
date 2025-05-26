@@ -341,6 +341,7 @@ public class AppGUI {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(new Color(34, 45, 65)); // Dark poker table theme
+        JButton startButton = new JButton("Start Game");
 
         JLabel tableLabel = new JLabel("Poker Game");
         tableLabel.setForeground(Color.WHITE);
@@ -355,7 +356,7 @@ public class AppGUI {
         JPanel communityPanel = new JPanel();
         communityPanel.setBackground(new Color(34, 45, 65));
         communityPanel.setLayout(new BoxLayout(communityPanel, BoxLayout.X_AXIS));
-        if (currentGame != null) {
+        if (currentGame != null && currentGame.getState() == Game.State.PLAYING) {
             for (int i = 0; i < 5; i++) {
                 JLabel cardLabel = new JLabel();
                 cardLabel.setIcon(loadCardImage(null)); // Default back
@@ -382,17 +383,23 @@ public class AppGUI {
                 playerLabel.setForeground(Color.WHITE);
                 playerLabel.setFont(playerLabel.getFont().deriveFont(Font.PLAIN, 14f));
 
-                JLabel card1 = new JLabel(loadCardImage(null));
-                JLabel card2 = new JLabel(loadCardImage(null));
+                JLabel card1 = null;
+                JLabel card2 = null;
+                if(currentGame.getState() == Game.State.PLAYING){
+                    card1 = new JLabel(loadCardImage(null));
+                    card2 = new JLabel(loadCardImage(null));
+                    playerRow.add(card1);
+                    playerRow.add(card2);
+                }
 
                 JLabel chips = new JLabel("Chips: " + player.getChips());
                 chips.setForeground(Color.GREEN);
 
                 playerRow.add(playerLabel);
                 playerRow.add(Box.createHorizontalStrut(10));
-                playerRow.add(card1);
+                if(currentGame.getState() == Game.State.PLAYING && card1 != null) playerRow.add(card1);
                 playerRow.add(Box.createHorizontalStrut(10));
-                playerRow.add(card2);
+                if(currentGame.getState() == Game.State.PLAYING && card2 != null) playerRow.add(card2);
                 playerRow.add(Box.createHorizontalGlue());
                 playerRow.add(chips);
 
@@ -405,12 +412,25 @@ public class AppGUI {
         JPanel buttonPanel = new JPanel();
         buttonPanel.setBackground(new Color(34, 45, 65));
 
+        if (currentGame != null && currentGame.getCreaterPlayer().getName().equals(currentPlayerName)) {
+            if(currentGame.getState() == Game.State.PLAYING){
+                startButton.setEnabled(false);
+            }
+            startButton.setEnabled(true);
+        } else {
+            startButton.setEnabled(false);
+        }
+
+        startButton.addActionListener((e) -> {
+            client.sendMessage("START_GAME:" + currentGame.getGameId());
+        });
+
         JButton callButton = new JButton("Call");
         JButton foldButton = new JButton("Fold");
         JButton raiseButton = new JButton("Raise");
         JButton exitGameButton = new JButton("Exit game");
 
-        JButton[] buttons = {callButton, foldButton, raiseButton, exitGameButton};
+        JButton[] buttons = {callButton, foldButton, raiseButton, exitGameButton, startButton};
         for (JButton btn : buttons) {
             btn.setBackground(new Color(70, 130, 180));
             btn.setForeground(Color.WHITE);
@@ -418,6 +438,7 @@ public class AppGUI {
             btn.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
         }
 
+        buttonPanel.add(startButton);
         buttonPanel.add(callButton);
         buttonPanel.add(foldButton);
         buttonPanel.add(raiseButton);
@@ -452,7 +473,7 @@ public class AppGUI {
     private ImageIcon loadCardImage(Card card) {
         String path;
         if (card == null) {
-            path = "/images/cards/2_of_clubs.png";  // default card
+            path = "/images/cards/card_back.png";  // default card
         } else {
             String rank = card.getRank().toString().toLowerCase();
             String suit = card.getSuit().toString().toLowerCase();

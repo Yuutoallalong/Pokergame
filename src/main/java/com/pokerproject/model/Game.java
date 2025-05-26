@@ -16,6 +16,10 @@ public class Game {
         FOLD, CHECK, CALL, BET, RAISE
     }
 
+    public enum State {
+        WAITING, PLAYING
+    }
+
     private String gameId;
     private List<Player> players;
     private List<Player> activePlayers;
@@ -32,6 +36,7 @@ public class Game {
     private int lastRaiseAmount;
     private Player lastRaiser;
     private Map<Player, Integer> playerBets = new HashMap<>();
+    private State state;
 
     private static final int MAX_PLAYERS = 4;
 
@@ -45,6 +50,7 @@ public class Game {
         this.gameStarted = false;
         this.communityCards = new ArrayList<>();
         this.pot = 0;
+        this.state = State.WAITING;
 
         if (!gameStarted) {
             initializeFirstDealer();
@@ -71,12 +77,24 @@ public class Game {
         return players;
     }
 
+    public Player getCreaterPlayer() {
+        return players.stream().filter(p -> p.isCreater).findFirst().orElse(null);
+    }
+
     public String getGameId() {
         return gameId;
     }
 
     public boolean isPlayerNameExists(String name) {
         return players.stream().anyMatch(player -> player.getName().equalsIgnoreCase(name));
+    }
+
+    public void setState(State state){
+        this.state = state;
+    }
+
+    public State getState() {
+        return state;
     }
 
     private void initializeFirstDealer() {

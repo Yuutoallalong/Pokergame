@@ -46,7 +46,7 @@ public class ClientHandler implements Runnable {
                         out.println("");
                         continue;
                     }
-                    this.player = new Player(playerName, this);
+                    this.player = new Player(playerName, this,true);
                     GameManager manager = GameManager.getInstance();
                     currentGame = manager.createGame(player);
                     System.out.println("CREATE GAME: " + currentGame);
@@ -78,7 +78,7 @@ public class ClientHandler implements Runnable {
                         out.println("");
                         continue;
                     }
-                    this.player = new Player(playerName, this);
+                    this.player = new Player(playerName, this, false);
                     JoinGameResult joinGameResult = manager.joinGame(gameId, player);
                     currentGame = joinGameResult.getGame();
                     if (currentGame == null) {
@@ -137,6 +137,14 @@ public class ClientHandler implements Runnable {
 
                     currentGame = null;
                     
+                    continue;
+                }else if(message.startsWith("START_GAME:")){
+                    String[] startParts = message.split(":", 2);
+                    String gameId = startParts[1];
+                    Game game = GameManager.getInstance().getGame(gameId);
+                    game.setState(Game.State.PLAYING);
+                    String gameJson = gson.toJson(currentGame);
+                    broadcastToGame("UPDATE_GAME:" + gameJson);
                     continue;
                 }
             }
