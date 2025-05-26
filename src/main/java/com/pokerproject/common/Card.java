@@ -1,7 +1,9 @@
-package src.main.java.com.pokerproject.common;
+package com.pokerproject.common;
 // Card class
 
-import src.main.java.com.pokerproject.server.GameState;
+import java.util.List;
+
+import com.pokerproject.server.GameState;
 
 public class Card {
     private Suit suit;

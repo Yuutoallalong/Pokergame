@@ -1,4 +1,4 @@
-package src.main.java.com.pokerproject.server;
+package com.pokerproject.server;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -17,7 +17,7 @@ public class PokerServer {
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("New client connected: " + clientSocket.getInetAddress());
-
+                
                 ClientHandler handler = new ClientHandler(clientSocket);
                 threadPool.submit(handler);
             }

@@ -1,4 +1,4 @@
-package src.main.java.com.pokerproject.common;
+package com.pokerproject.common;
 
 public class Suit {
     

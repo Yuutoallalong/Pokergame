@@ -1,4 +1,4 @@
-package src.main.java.com.pokerproject.server;
+package com.pokerproject.server;
 
 public class Player {
     private String name;

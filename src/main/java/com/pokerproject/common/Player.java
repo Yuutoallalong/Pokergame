@@ -1,4 +1,6 @@
-package src.main.java.com.pokerproject.common;
+package com.pokerproject.common;
+
+import java.util.List;
 
 // Player class
 public class Player {

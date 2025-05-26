@@ -1,4 +1,4 @@
-package src.main.java.com.pokerproject.client;
+package com.pokerproject.client;
 
 import java.awt.CardLayout;
 import java.awt.Component;

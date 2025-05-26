@@ -1,11 +1,13 @@
-package src.main.java.com.pokerproject.server;
-import src.main.java.com.pokerproject.common.Deck;
+package com.pokerproject.server;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.pokerproject.common.*;
+
+
 public class Game {
-    private String gameId;
-    private List<Player> players;
+    private final String gameId;
+    private final List<Player> players;
     private Deck deck;
     private int pot;
     private GameState state;

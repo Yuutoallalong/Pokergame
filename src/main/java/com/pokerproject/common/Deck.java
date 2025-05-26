@@ -1,5 +1,7 @@
-package src.main.java.com.pokerproject.common;
+package com.pokerproject.common;
 // Deck class
+
+import java.util.List;
 
 public class Deck {
     private List<Card> cards;
