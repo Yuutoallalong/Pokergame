@@ -21,7 +21,7 @@ public class Game {
     }
 
     public boolean addPlayer(Player player) {
-        if (players.size() < MAX_PLAYERS) {
+        if (players.size() < MAX_PLAYERS ) {
             players.add(player);
             return true;
         }
@@ -60,6 +60,11 @@ public class Game {
     public void setState(GameState state) {
         this.state = state;
     }
+
+    public boolean isPlayerNameExists(String name) {
+        return players.stream().anyMatch(player -> player.getName().equalsIgnoreCase(name));
+    }
+
 
     @Override
     public String toString() {

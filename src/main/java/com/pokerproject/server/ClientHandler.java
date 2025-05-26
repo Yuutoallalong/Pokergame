@@ -57,6 +57,13 @@ public class ClientHandler implements Runnable {
                     }
                     this.player = new Player(playerName, this);
                     GameManager manager = GameManager.getInstance();
+
+                    Game game = manager.getGame(gameId);
+                    if (game.isPlayerNameExists(playerName)) {
+                        out.println("This name is already taken in the game.");
+                        return;
+                    }
+                    
                     JoinGameResult joinGameResult = manager.joinGame(gameId, player);
                     currentGame = joinGameResult.getGame();
                     System.out.println("JOIN GAME: "+currentGame);
