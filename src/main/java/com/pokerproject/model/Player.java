@@ -35,10 +35,6 @@ public class Player {
     public List<Card> getHoleCards() {
         return new ArrayList<>(holeCards);
     }
-    
-    public void setHoleCards(List<Card> cards) {
-        this.holeCards = new ArrayList<>(cards);
-    }
 
     public void addCard(Card card) {
         this.holeCards.add(card);
