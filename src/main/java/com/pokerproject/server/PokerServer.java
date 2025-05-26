@@ -8,7 +8,7 @@ import java.util.concurrent.Executors;
 
 public class PokerServer {
     private static final int PORT = 12345;
-    private ExecutorService threadPool = Executors.newCachedThreadPool();
+    private final ExecutorService threadPool = Executors.newCachedThreadPool();
 
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
@@ -19,7 +19,10 @@ public class PokerServer {
                 System.out.println("New client connected: " + clientSocket.getInetAddress());
                 
                 ClientHandler handler = new ClientHandler(clientSocket);
-                threadPool.submit(handler);
+                threadPool.submit(() -> {
+                    System.out.println("Running handler in thread: " + Thread.currentThread().getName());
+                    handler.run();
+                });
             }
 
         } catch (IOException e) {

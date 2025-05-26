@@ -1,4 +1,4 @@
-package com.pokerproject.server;
+package com.pokerproject.common;
 
 public enum GameState {
     WAITING,

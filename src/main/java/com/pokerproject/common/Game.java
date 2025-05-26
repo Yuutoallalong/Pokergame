@@ -1,14 +1,12 @@
-package com.pokerproject.server;
+package com.pokerproject.common;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.pokerproject.common.*;
 
 
 public class Game {
     private final String gameId;
     private final List<Player> players;
-    private Deck deck;
+    private final Deck deck;
     private int pot;
     private GameState state;
 
@@ -34,6 +32,11 @@ public class Game {
         players.remove(player);
     }
 
+    public void removePlayerByName(String name) {
+        players.removeIf(p -> p.getName().equals(name));
+    }
+
+
     public String getGameId() {
         return gameId;
     }
@@ -57,4 +60,15 @@ public class Game {
     public void setState(GameState state) {
         this.state = state;
     }
+
+    @Override
+    public String toString() {
+        return "Game{" +
+            "gameId='" + gameId + '\'' +
+            ", players=" + players +
+            ", pot=" + pot +
+            ", state=" + state +
+            '}';
+    }
+
 }

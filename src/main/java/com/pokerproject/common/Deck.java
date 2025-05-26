@@ -7,6 +7,6 @@ public class Deck {
     private List<Card> cards;
     
     public void shuffle() { /* Implementation */ }
-    public Card drawCard() { /* Implementation */ }
+    public Card drawCard() { return null; }
     // Other methods
 }

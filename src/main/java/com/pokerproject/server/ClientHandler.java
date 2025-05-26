@@ -6,13 +6,18 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+import com.google.gson.Gson;
+import com.pokerproject.common.Game;
+import com.pokerproject.common.JoinGameResult;
+import com.pokerproject.common.Player;
+
 public class ClientHandler implements Runnable {
     private Socket clientSocket;
     private BufferedReader in;
     private PrintWriter out;
     private Player player;
     private Game currentGame;
-
+    private static final Gson gson = new Gson();
     public ClientHandler(Socket socket) {
         this.clientSocket = socket;
         try {
@@ -26,57 +31,85 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         try {
-            out.println("Welcome to the Poker Server!");
-
-            // ขอชื่อผู้เล่น
-            out.println("Enter your name:");
-            String playerName = in.readLine();
-            if (playerName == null || playerName.isEmpty()) {
-                out.println("Invalid name. Disconnecting...");
-                return;
-            }
-
-            // ขอ Game ID
-            out.println("Enter Game ID to join or create:");
-            String gameId = in.readLine();
-            if (gameId == null || gameId.isEmpty()) {
-                out.println("Invalid Game ID. Disconnecting...");
-                return;
-            }
-
-            // สร้าง Player และเชื่อมต่อกับ GameManager
-            this.player = new Player(playerName, this);
-            GameManager manager = GameManager.getInstance();
-            currentGame = manager.joinOrCreateGame(gameId, player);
-
-            if (currentGame == null) {
-                out.println("Game is full. Disconnecting...");
-                return;
-            }
-
-            out.println("Joined game: " + gameId);
-            broadcastToGame(playerName + " has joined the game!");
-
-            // รับข้อความจาก client
-            String message;
-            while ((message = in.readLine()) != null) {
-                System.out.println("[" + playerName + "] " + message);
-
-                if (message.equalsIgnoreCase("exit")) {
-                    out.println("Goodbye!");
-                    break;
+            String message = in.readLine();
+            if (message != null) {
+                String[] parts = message.split(":");
+                if (parts[0].equalsIgnoreCase("CREATE") && parts.length == 2) {
+                    String playerName = parts[1];
+                    if (playerName == null || playerName.trim().isEmpty()) {
+                        out.println("Player name cannot be empty.");
+                        return;
+                    }
+                    this.player = new Player(playerName, this);
+                    GameManager manager = GameManager.getInstance();
+                    currentGame = manager.createGame(player);
+                    System.out.println("CREATE GAME: "+currentGame);
+                    String gameJson = gson.toJson(currentGame);
+                    String gameId = currentGame.getGameId();
+                    out.println("Game created successfully! Game ID: " + gameId);
+                    out.println(gameJson);
+                } else if (parts[0].equalsIgnoreCase("JOIN") && parts.length == 3) {
+                    String playerName = parts[1];
+                    String gameId = parts[2];
+                    if (playerName == null || playerName.trim().isEmpty()) {
+                        out.println("Player name cannot be empty.");
+                        return;
+                    }
+                    this.player = new Player(playerName, this);
+                    GameManager manager = GameManager.getInstance();
+                    JoinGameResult joinGameResult = manager.joinGame(gameId, player);
+                    currentGame = joinGameResult.getGame();
+                    System.out.println("JOIN GAME: "+currentGame);
+                    if (currentGame == null) {
+                        out.println(joinGameResult.getError());
+                        return;
+                    }
+                    String gameJson = gson.toJson(currentGame);
+                    out.println("Joined game: " + gameId);
+                    out.println(gameJson);
+                    broadcastToGame("UPDATE_GAME:"+gameJson);  
                 } else {
-                    // ตัวอย่าง: broadcast ข้อความไปทุกคนในห้อง
-                    broadcastToGame("[" + playerName + "]: " + message);
+                    out.println("Invalid command format.");
+                    return;
                 }
             }
 
+            // รับข้อความในเกมเหมือนเดิม
+
+            while ((message = in.readLine()) != null) {
+                System.out.println("[" + player.getName() + "] " + message);    
+                if (message.equalsIgnoreCase("exit")) {
+                    out.println("Goodbye!");
+                    break;
+                } else if (message.startsWith("EXIT_GAME:")) {
+                    System.out.println("EXIT_GAME: " + message);
+                    String[] parts = message.split(":", 3);
+                    String playerName = parts[1];
+                    String gameId = parts[2];
+
+                    Game game = GameManager.getInstance().getGame(gameId);
+                    if (game != null) {
+                        game.removePlayerByName(playerName);
+                        String gameJson = gson.toJson(game);
+                        broadcastToGame("UPDATE_GAME:"+gameJson);  
+                    }
+                } else {
+                    broadcastToGame("[" + player.getName() + "]: " + message);
+                }
+            }
+            
+            
+
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
+        } catch(Exception e){
+            System.out.println(e);
+        } 
+        finally {
             cleanup();
         }
     }
+
 
     public void sendMessage(String message) {
         out.println(message);

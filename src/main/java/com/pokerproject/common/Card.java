@@ -1,10 +1,6 @@
 package com.pokerproject.common;
 // Card class
 
-import java.util.List;
-
-import com.pokerproject.server.GameState;
-
 public class Card {
     private Suit suit;
     private Rank rank;
@@ -12,14 +8,3 @@ public class Card {
 }
 
 
-
-
-
-// Game class
-public class Game {
-    private List<Player> players;
-    private Deck deck;
-    private int pot;
-    private GameState state;
-    // Game logic methods
-}
