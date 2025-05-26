@@ -1,10 +1,11 @@
-package src.main.java.com.pokerproject.model;
+package com.pokerproject.model;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import com.pokerproject.server.ClientHandler;
+
 public class Player {
-    private String id;
     private String name;
     private List<Card> holeCards;
     private int chips;
@@ -12,11 +13,12 @@ public class Player {
     private boolean isSmallBlind;
     private boolean isBigBlind;
     private boolean isActive; //current player
+    private transient ClientHandler handler;
     
-    public Player(String id, String name, int startingChips) {
-        this.id = id;
+    public Player(String name, ClientHandler handler) {
         this.name = name;
-        this.chips = startingChips;
+        this.handler = handler;
+        this.chips = 1000;
         this.holeCards = new ArrayList<>();
         this.isDealer = false;
         this.isSmallBlind = false;
@@ -24,10 +26,10 @@ public class Player {
         this.isActive = true;
     }
 
-    public String getId() {
-        return id;
+    public ClientHandler getHandler() {
+        return handler;
     }
-    
+
     public String getName() {
         return name;
     }

@@ -1,15 +1,15 @@
-package src.main.java.com.pokerproject.game;
-
-import src.main.java.com.pokerproject.model.Player;
-import src.main.java.com.pokerproject.model.Deck;
-import src.main.java.com.pokerproject.model.Card;
-import src.main.java.com.pokerproject.model.PokerHand;
+package com.pokerproject.game;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
+
+import com.pokerproject.model.Card;
+import com.pokerproject.model.Deck;
+import com.pokerproject.model.Player;
+import com.pokerproject.model.PokerHand;
 
 public class Game {
 
@@ -21,6 +21,7 @@ public class Game {
         FOLD, CHECK, CALL, BET, RAISE
     }
 
+    private String gameId;
     private List<Player> players;
     private List<Player> activePlayers;
     private Deck deck;
@@ -37,9 +38,12 @@ public class Game {
     private Player lastRaiser;
     private Map<Player, Integer> playerBets = new HashMap<>();
 
-    public Game(List<Player> players, int smallBlindAmount, int bigBlindAmount) {
-        this.players = players;
-        this.activePlayers = new ArrayList<>(players);
+    private static final int MAX_PLAYERS = 4;
+
+    public Game(String gameId, int smallBlindAmount, int bigBlindAmount) {
+        this.gameId = gameId;
+        this.players = new ArrayList<>();
+        this.activePlayers = new ArrayList<>();
         this.deck = new Deck();
         this.smallBlindAmount = smallBlindAmount;
         this.bigBlindAmount = bigBlindAmount;
@@ -50,6 +54,34 @@ public class Game {
         if (!gameStarted) {
             initializeFirstDealer();
         }
+    }
+
+    public boolean addPlayer(Player player) {
+        if (players.size() < MAX_PLAYERS ) {
+            players.add(player);
+            return true;
+        }
+        return false;
+    }
+
+    public void removePlayer(Player player) {
+        players.remove(player);
+    }
+
+    public boolean removePlayerByName(String name) {
+        return players.removeIf(p -> p.getName().equals(name));
+    }
+
+    public List<Player> getPlayers() {
+        return players;
+    }
+
+    public String getGameId() {
+        return gameId;
+    }
+
+    public boolean isPlayerNameExists(String name) {
+        return players.stream().anyMatch(player -> player.getName().equalsIgnoreCase(name));
     }
 
     private void initializeFirstDealer() {

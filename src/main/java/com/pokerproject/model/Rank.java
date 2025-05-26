@@ -1,4 +1,4 @@
-package src.main.java.com.pokerproject.model;
+package com.pokerproject.model;
 
 public enum Rank {
     TWO(2),

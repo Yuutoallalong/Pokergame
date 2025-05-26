@@ -1,4 +1,4 @@
-package src.main.java.com.pokerproject.model;
+package com.pokerproject.model;
 
 import java.util.*;
 

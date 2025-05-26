@@ -1,4 +1,4 @@
-package src.main.java.com.pokerproject.model;
+package com.pokerproject.model;
 
 public class Card implements Comparable<Card>{
     private final Rank rank;

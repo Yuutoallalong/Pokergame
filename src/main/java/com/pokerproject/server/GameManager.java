@@ -4,9 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import com.pokerproject.common.Game;
-import com.pokerproject.common.JoinGameResult;
-import com.pokerproject.common.Player;
+import com.pokerproject.game.Game;
+import com.pokerproject.model.JoinGameResult;
+import com.pokerproject.model.Player;
 
 public class GameManager {
     private static GameManager instance;
@@ -38,7 +38,7 @@ public class GameManager {
             gameId = generateRandomGameId();
         } while (games.containsKey(gameId));
 
-        Game game = new Game(gameId);
+        Game game = new Game(gameId,50,100);
         game.addPlayer(player);
         games.put(gameId, game);
         System.out.println("Created new game with random ID: " + gameId);
