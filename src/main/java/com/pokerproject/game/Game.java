@@ -1,10 +1,12 @@
-package src.main.java.com.pokerproject.server;
+package src.main.java.com.pokerproject.game;
+
+import src.main.java.com.pokerproject.network.ClientHandler;
 
 // Game class
 public class Game {
     private List<Player> players;
     private Deck deck;
     private int pot;
-    private GameState state;
+    private ClientHandler state;
     // Game logic methods
 }

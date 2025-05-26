@@ -1,6 +1,4 @@
-package src.main.java.com.pokerproject.common;
-
-import src.main.java.com.pokerproject.server.GameState;
+package src.main.java.com.pokerproject.model;
 
 public class Card implements Comparable<Card>{
     private final Rank rank;

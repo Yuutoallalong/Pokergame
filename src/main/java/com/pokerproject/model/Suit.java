@@ -1,4 +1,4 @@
-package src.main.java.com.pokerproject.common;
+package src.main.java.com.pokerproject.model;
 
 public enum Suit {
     CLUBS("clubs"),
