@@ -89,11 +89,11 @@ public class Player {
         this.isBigBlind = bigBlind;
     }
     
-    public boolean isActive() {
+    public boolean getIsActive() {
         return isActive;
     }
     
-    public void setActive(boolean active) {
+    public void setIsActive(boolean active) {
         this.isActive = active;
     }
 

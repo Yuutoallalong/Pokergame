@@ -41,6 +41,19 @@ public class AppGUI {
         new AppGUI().createAndShowGUI();
     }
 
+    public static String getPlayerRole(Player player){
+        if(player.isDealer()){
+            return "Dealer";
+        }else if(player.isSmallBlind()){
+            return "Small Blind";
+        }else if(player.isBigBlind()){
+            return "Big Blind";
+        }else{
+            return "";
+        }
+    }
+
+
     private void startListeningFromServer() {
         stopListeningFromServer();
 
@@ -379,15 +392,31 @@ public class AppGUI {
                 playerRow.setLayout(new BoxLayout(playerRow, BoxLayout.X_AXIS));
                 playerRow.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-                JLabel playerLabel = new JLabel("Player " + player.getName() + ": ");
-                playerLabel.setForeground(Color.WHITE);
-                playerLabel.setFont(playerLabel.getFont().deriveFont(Font.PLAIN, 14f));
+                JLabel playerLabel = new JLabel(player.getName() + " - " + getPlayerRole(player));
+                if(player.getName().equals(currentPlayerName)){
+                    playerLabel.setForeground(Color.BLUE);
+                    playerLabel.setFont(playerLabel.getFont().deriveFont(Font.BOLD, 14f));
+                }else{
+                    playerLabel.setForeground(Color.WHITE);
+                    playerLabel.setFont(playerLabel.getFont().deriveFont(Font.PLAIN, 14f));
+                }
+
+                if (!player.getIsActive()) {
+                    playerLabel.setForeground(Color.GRAY);
+                    playerLabel.setFont(playerLabel.getFont().deriveFont(Font.ITALIC, 14f));
+                }
 
                 JLabel card1 = null;
                 JLabel card2 = null;
                 if(currentGame.getState() == Game.State.PLAYING){
-                    card1 = new JLabel(loadCardImage(null));
-                    card2 = new JLabel(loadCardImage(null));
+                    System.out.println(player.getHoleCards());
+                    if(player.getName().equals(currentPlayerName)){
+                        card1 = new JLabel(loadCardImage(player.getHoleCards().get(0)));
+                        card2 = new JLabel(loadCardImage(player.getHoleCards().get(1)));
+                    }else {
+                        card1 = new JLabel(loadCardImage(null));
+                        card2 = new JLabel(loadCardImage(null));
+                    }
                     playerRow.add(card1);
                     playerRow.add(card2);
                 }
@@ -412,7 +441,7 @@ public class AppGUI {
         JPanel buttonPanel = new JPanel();
         buttonPanel.setBackground(new Color(34, 45, 65));
 
-        if (currentGame != null && currentGame.getCreaterPlayer().getName().equals(currentPlayerName)) {
+        if (currentGame != null && currentGame.getCreaterPlayer().getName().equals(currentPlayerName) && currentGame.getPlayers().size() > 2) {
             if(currentGame.getState() == Game.State.PLAYING){
                 startButton.setEnabled(false);
             }
@@ -425,9 +454,15 @@ public class AppGUI {
             client.sendMessage("START_GAME:" + currentGame.getGameId());
         });
 
+        boolean isFirst = false;
+        if(currentGame != null){
+            isFirst = currentGame.getCurrentPlayer().getName().equals(currentPlayerName);
+        }
         JButton callButton = new JButton("Call");
         JButton foldButton = new JButton("Fold");
         JButton raiseButton = new JButton("Raise");
+        JButton checkButton = new JButton("Check");
+        JButton betButton = new JButton("Bet");
         JButton exitGameButton = new JButton("Exit game");
 
         JButton[] buttons = {callButton, foldButton, raiseButton, exitGameButton, startButton};
@@ -437,12 +472,40 @@ public class AppGUI {
             btn.setFocusPainted(false);
             btn.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
         }
-
-        buttonPanel.add(startButton);
-        buttonPanel.add(callButton);
-        buttonPanel.add(foldButton);
-        buttonPanel.add(raiseButton);
+        
+        if(currentGame != null && currentGame.getState() == Game.State.WAITING){
+            buttonPanel.add(startButton);
+        }else{
+            buttonPanel.remove(startButton);
+            if(isFirst){
+                buttonPanel.add(callButton);
+                buttonPanel.add(foldButton);
+                buttonPanel.add(betButton);
+            }else{
+                buttonPanel.remove(callButton);
+                buttonPanel.remove(foldButton);
+                buttonPanel.remove(betButton);
+            }
+            // buttonPanel.add(callButton);
+            // buttonPanel.add(foldButton);
+            // buttonPanel.add(raiseButton);
+        }
         buttonPanel.add(exitGameButton);
+
+        if(currentGame != null){
+            callButton.addActionListener(e -> client.sendMessage("CALL:" + currentGame.getGameId() + ":" + currentPlayerName));
+            foldButton.addActionListener(e -> client.sendMessage("FOLD:" + currentGame.getGameId() + ":" + currentPlayerName));
+            raiseButton.addActionListener(e -> {
+                String raiseAmount = JOptionPane.showInputDialog("Raise: ");
+                client.sendMessage("RAISE:" + currentGame.getGameId() + ":" + currentPlayerName + ":" + raiseAmount);
+                
+            });
+            checkButton.addActionListener(e -> client.sendMessage("CHECK:" + currentGame.getGameId() + ":" + currentPlayerName));
+            betButton.addActionListener(e -> {
+                String betAmount = JOptionPane.showInputDialog("Bet: ");
+                client.sendMessage("BET:" + currentGame.getGameId() + ":" + currentPlayerName+ ":" + betAmount);
+            });
+        }
 
         // ======= Back Button Action =======
         exitGameButton.addActionListener(e -> {

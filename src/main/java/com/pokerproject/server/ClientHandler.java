@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.Gson;
+import com.pokerproject.model.Deck;
 import com.pokerproject.model.Game;
 import com.pokerproject.model.JoinGameResult;
 import com.pokerproject.model.Player;
@@ -46,7 +47,7 @@ public class ClientHandler implements Runnable {
                         out.println("");
                         continue;
                     }
-                    this.player = new Player(playerName, this,true);
+                    this.player = new Player(playerName, this, true);
                     GameManager manager = GameManager.getInstance();
                     currentGame = manager.createGame(player);
                     System.out.println("CREATE GAME: " + currentGame);
@@ -116,7 +117,7 @@ public class ClientHandler implements Runnable {
 
                     Game game = GameManager.getInstance().getGame(gameId);
                     if (game != null) {
-                        
+
                         boolean removed = game.removePlayerByName(playerName);
                         if (game.getPlayers().isEmpty()) {
                             GameManager.getInstance().removeGame(gameId);
@@ -125,7 +126,7 @@ public class ClientHandler implements Runnable {
                             out.println("LEAVE_GAME_SUCCESS");
                             String gameJson = gson.toJson(game);
                             broadcastToOthers("UPDATE_GAME:" + gameJson, playerName);
-                            
+
                             System.out.println("Player " + playerName + " left game " + gameId);
                         } else {
                             out.println("Failed to leave game - player not found");
@@ -133,18 +134,38 @@ public class ClientHandler implements Runnable {
                     } else {
                         out.println("Game not found");
                     }
-                    
 
                     currentGame = null;
-                    
+
                     continue;
-                }else if(message.startsWith("START_GAME:")){
+                } else if (message.startsWith("START_GAME:")) {
                     String[] startParts = message.split(":", 2);
                     String gameId = startParts[1];
                     Game game = GameManager.getInstance().getGame(gameId);
                     game.setState(Game.State.PLAYING);
-                    String gameJson = gson.toJson(currentGame);
+
+                    Deck deck = game.getDeck();
+                    deck.shuffle();
+
+                    List<Player> players = game.getPlayers();
+
+                    deck.dealCardsFromPosition(players, 0, 2);
+                    game.initializeFirstDealer();
+                    String gameJson = gson.toJson(game);
                     broadcastToGame("UPDATE_GAME:" + gameJson);
+                    continue;
+                } else if (message.startsWith("FOLD:")) {
+                    String[] foldParts = message.split(":", 3);
+                    String gameId = foldParts[1];
+                    String playerName = foldParts[2];
+                    Game game = GameManager.getInstance().getGame(gameId);
+                    Player actionPlayer = game.getPlayerByName(playerName);
+                    System.out.println(actionPlayer.getName());
+                    game.processPlayerAction(actionPlayer, Game.Action.FOLD, 0);
+                    System.out.println("Process Success");
+                    System.out.println(game.getCurrentPlayer().getName());
+                    String gameJsonFold = gson.toJson(game);
+                    broadcastToGame("UPDATE_GAME:" + gameJsonFold);
                     continue;
                 }
             }

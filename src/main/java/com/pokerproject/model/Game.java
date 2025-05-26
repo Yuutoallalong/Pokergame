@@ -22,13 +22,12 @@ public class Game {
 
     private String gameId;
     private List<Player> players;
-    private List<Player> activePlayers;
+    // private List<Player> activePlayers;
     private Deck deck;
     private int dealerPosition;
     private int currentPlayerIndex;
     private int smallBlindAmount;
     private int bigBlindAmount;
-    private boolean gameStarted;
     private Round currentRound;
     private List<Card> communityCards;
     private int pot;
@@ -37,24 +36,23 @@ public class Game {
     private Player lastRaiser;
     private Map<Player, Integer> playerBets = new HashMap<>();
     private State state;
+    private boolean isAllFolded;
 
-    private static final int MAX_PLAYERS = 4;
+
+    private static final int MAX_PLAYERS = 8;
 
     public Game(String gameId, int smallBlindAmount, int bigBlindAmount) {
         this.gameId = gameId;
         this.players = new ArrayList<>();
-        this.activePlayers = new ArrayList<>();
+        // this.activePlayers = new ArrayList<>();
         this.deck = new Deck();
         this.smallBlindAmount = smallBlindAmount;
         this.bigBlindAmount = bigBlindAmount;
-        this.gameStarted = false;
         this.communityCards = new ArrayList<>();
         this.pot = 0;
         this.state = State.WAITING;
-
-        if (!gameStarted) {
-            initializeFirstDealer();
-        }
+        this.isAllFolded = false;
+        this.currentRound = Round.PREFLOP;
     }
 
     public boolean addPlayer(Player player) {
@@ -67,6 +65,10 @@ public class Game {
 
     public void removePlayer(Player player) {
         players.remove(player);
+    }
+
+    public Deck getDeck(){
+        return this.deck;
     }
 
     public boolean removePlayerByName(String name) {
@@ -89,6 +91,10 @@ public class Game {
         return players.stream().anyMatch(player -> player.getName().equalsIgnoreCase(name));
     }
 
+    public Player getPlayerByName(String name) {
+        return players.stream().filter(p -> p.getName().equals(name)).findFirst().orElse(null);
+    }
+
     public void setState(State state){
         this.state = state;
     }
@@ -97,7 +103,7 @@ public class Game {
         return state;
     }
 
-    private void initializeFirstDealer() {
+    public void initializeFirstDealer() {
         if (players.isEmpty()) {
             return;
         }
@@ -107,7 +113,7 @@ public class Game {
 
         assignPositions();
 
-        gameStarted = true;
+        this.state = State.PLAYING;
     }
 
     private void assignPositions() {
@@ -124,6 +130,7 @@ public class Game {
 
         int bigBlindPosition = (smallBlindPosition + 1) % playerCount;
         players.get(bigBlindPosition).setBigBlind(true);
+        currentPlayerIndex = (bigBlindPosition + 1) % players.size();
     }
 
     public void rotateDealer() {
@@ -132,7 +139,7 @@ public class Game {
     }
 
     public void startNewHand() {
-        if (gameStarted) {
+        if (this.state == State.PLAYING) {
             rotateDealer();
         }
 
@@ -141,8 +148,8 @@ public class Game {
         lastRaiseAmount = 0;
         lastRaiser = null;
         communityCards.clear();
-        activePlayers.clear();
-        activePlayers.addAll(players);
+        // activePlayers.clear();
+        // activePlayers.addAll(players);
         playerBets.clear(); 
 
         deck.reset();
@@ -191,7 +198,8 @@ public class Game {
 
         switch (action) {
             case FOLD:
-                activePlayers.remove(player);
+                // activePlayers.remove(player);
+                player.setIsActive(false);
                 break;
 
             case CHECK:
@@ -250,13 +258,27 @@ public class Game {
     }
 
     private void moveToNextPlayer() {
+        System.out.println("moveToNextPlayer");
+        System.out.println("currentPlayerIndexBefore: " + currentPlayerIndex);
+        System.out.println("PlayersBefore: " + players);
+        System.out.println("getCurrentPlayerBefore: " + getCurrentPlayer());
+        int count = 0;
+        int totalPlayers = players.size();
+
         do {
-            currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
-        } while (!activePlayers.contains(players.get(currentPlayerIndex)));
+            this.currentPlayerIndex = (this.currentPlayerIndex + 1) % totalPlayers;
+            count++;
+        } while (!players.get(this.currentPlayerIndex).getIsActive() && count < totalPlayers);
+
+        isAllFolded = count >= totalPlayers;
+        System.out.println("currentPlayerIndexAfter: " + currentPlayerIndex);
+        System.out.println("PlayersAfter: " + players);
+        System.out.println("getCurrentPlayerAfter: " + getCurrentPlayer());
     }
 
+
     private boolean isRoundComplete() {
-        if (activePlayers.size() == 1) {
+        if (isAllFolded) {
             return true;
         }
         if (lastRaiser == null) {
@@ -299,16 +321,29 @@ public class Game {
         return bestHand;
     }
 
+    private List<Player> getUnfoldPlayer(){
+        List<Player> unFoldPlayers = new ArrayList<>();
+        for (Player player : players) {
+            if (player.getIsActive() == true) {
+                unFoldPlayers.add(player);
+            }
+        }
+        return unFoldPlayers;
+    }
+
     private void determineWinner() {
-        if (activePlayers.size() == 1) {
-            Player winner = activePlayers.get(0);
-            winner.addChips(pot);
-            return;
+        if (isAllFolded) {
+            List<Player> winners = getUnfoldPlayer();
+            if(winners.size() == 1){
+                winners.get(0).addChips(pot);
+                return;
+            }
+            
         }
 
         Map<Player, PokerHand> playerHands = new HashMap<>();
 
-        for (Player player : activePlayers) {
+        for (Player player : players) {
             List<Card> allCards = new ArrayList<>(player.getHoleCards());
             allCards.addAll(communityCards);
 
@@ -379,7 +414,7 @@ public class Game {
         if (currentRound != Round.SHOWDOWN) {
             currentPlayerIndex = (dealerPosition + 1) % players.size();
 
-            while (!activePlayers.contains(players.get(currentPlayerIndex))) {
+            while (players.get(currentPlayerIndex).getIsActive() == true) {
                 currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
             }
         }
@@ -427,9 +462,9 @@ public class Game {
         return currentBet;
     }
 
-    public List<Player> getActivePlayers() {
-        return new ArrayList<>(activePlayers);
-    }
+    // public List<Player> getActivePlayers() {
+    //     return new ArrayList<>(activePlayers);
+    // }
 
     public int getDealerPosition() {
         return dealerPosition;
