@@ -1,5 +1,7 @@
 package src.main.java.com.pokerproject.server;
 
-public class GameState {
-    
+public enum GameState {
+    WAITING,
+    PLAYING,
+    FINISHED
 }
