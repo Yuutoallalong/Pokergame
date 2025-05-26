@@ -1,15 +1,10 @@
-package com.pokerproject.game;
+package com.pokerproject.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-
-import com.pokerproject.model.Card;
-import com.pokerproject.model.Deck;
-import com.pokerproject.model.Player;
-import com.pokerproject.model.PokerHand;
 
 public class Game {
 

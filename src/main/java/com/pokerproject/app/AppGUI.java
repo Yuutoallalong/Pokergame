@@ -16,9 +16,9 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
 import com.google.gson.Gson;
-import com.pokerproject.client.ClientSocket;
-import com.pokerproject.game.Game;
+import com.pokerproject.model.Game;
 import com.pokerproject.model.Player;
+import com.pokerproject.server.ClientSocket;
 
 public class AppGUI {
 

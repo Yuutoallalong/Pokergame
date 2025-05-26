@@ -1,4 +1,4 @@
-package com.pokerproject.client;
+package com.pokerproject.server;
 
 import java.io.BufferedReader;
 import java.io.IOException;

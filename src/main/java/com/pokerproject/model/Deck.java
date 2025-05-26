@@ -7,7 +7,7 @@ import java.util.Random;
 
 public class Deck {
     private List<Card> cards;
-    private final Random random;
+    private transient final Random random;
 
     public Deck() {
         this.cards = new ArrayList<>(52);

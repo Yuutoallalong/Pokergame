@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import com.pokerproject.game.Game;
+import com.pokerproject.model.Game;
 import com.pokerproject.model.JoinGameResult;
 import com.pokerproject.model.Player;
 

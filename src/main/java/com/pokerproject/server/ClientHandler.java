@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.Gson;
-import com.pokerproject.game.Game;
+import com.pokerproject.model.Game;
 import com.pokerproject.model.JoinGameResult;
 import com.pokerproject.model.Player;
 

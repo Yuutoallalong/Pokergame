@@ -1,5 +1,5 @@
 package com.pokerproject.model;
-import com.pokerproject.game.Game;
+
 public class JoinGameResult {
     private Game game;
     private String error;
