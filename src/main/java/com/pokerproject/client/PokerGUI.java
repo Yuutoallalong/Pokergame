@@ -27,35 +27,76 @@
         private Game currentGame;
         private ClientSocket client;
         private String currentPlayerName;
+        private volatile boolean listeningThreadStarted = false;
+        private Thread listeningThread;
 
         public static void main(String[] args) {
             new PokerGUI().createAndShowGUI();
-        }
+        }   
         private void startListeningFromServer() {    
-            // ส่งข้อความหา Server    
-            new Thread(() -> {
-                try {
-                    String message;
-                    while ((message = client.readMessage()) != null) {
-                        if (message.startsWith("UPDATE_GAME:")) {
-                            String gameJson = message.substring("UPDATE_GAME:".length());
-                            currentGame = gson.fromJson(gameJson, Game.class);
+        stopListeningFromServer();
 
-                            SwingUtilities.invokeLater(() -> {
-                                mainPanel.remove(mainPanel.getComponent(2));
-                                JPanel gamePage = createGamePage();
-                                mainPanel.add(gamePage, "Game");
-                                cardLayout.show(mainPanel, "Game");
-                                mainPanel.revalidate();
-                                mainPanel.repaint();
-                            });
-                        }
-                        // else handle ข้อความอื่น ๆ
+        listeningThread = new Thread(() -> {
+            try {
+                String message;
+                while ((message = client.readMessage()) != null && !Thread.currentThread().isInterrupted()) {
+                    System.out.println("Received message: " + message); // Debug
+                    
+                    if (message.startsWith("UPDATE_GAME:")) {
+                        String gameJson = message.substring("UPDATE_GAME:".length());
+                        currentGame = gson.fromJson(gameJson, Game.class);
+
+                        SwingUtilities.invokeLater(() -> {
+                            // หา game panel และลบออก
+                            for (int i = 0; i < mainPanel.getComponentCount(); i++) {
+                                Component comp = mainPanel.getComponent(i);
+                                if (comp instanceof JPanel) {
+                                    // ใช้ index ของ Game panel (ควรเป็น index 2)
+                                    try {
+                                        mainPanel.remove(2); // Game panel index
+                                        break;
+                                    } catch (ArrayIndexOutOfBoundsException e) {
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            JPanel gamePage = createGamePage(); 
+                            mainPanel.add(gamePage, "Game");
+                            cardLayout.show(mainPanel, "Game");
+                            mainPanel.revalidate();
+                            mainPanel.repaint();
+                        });
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    else if (message.startsWith("LEAVE_GAME_SUCCESS")) {
+                        // รับ confirmation จาก server ว่า leave สำเร็จ
+                        System.out.println("Leave game confirmed by server");
+                    }
+                    // else handle ข้อความอื่น ๆ
                 }
-            }).start();
+            } catch (IOException e) {
+                if (!Thread.currentThread().isInterrupted()) {
+                    System.err.println("Connection error in listening thread: " + e.getMessage());
+                }
+            }
+        });
+
+        listeningThread.setDaemon(true);
+        listeningThread.start();
+        listeningThreadStarted = true;
+    }
+
+        public void stopListeningFromServer() {
+            listeningThreadStarted = false;
+            if (listeningThread != null && listeningThread.isAlive()) {
+                listeningThread.interrupt();
+                try {
+                    listeningThread.join(1000); // รอ 1 วินาที
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                listeningThread = null;
+            }
         }
 
         private void createAndShowGUI() {
@@ -139,27 +180,45 @@
                 }
                 try {
                     if (client == null) {
-                        client = new ClientSocket("localhost", 12345); // สร้างแค่ครั้งเดียว
+                        client = new ClientSocket("localhost", 12345);
                     }
+                    
                     client.sendMessage("CREATE:" + playerName);
                     String response = client.readMessage();
                     String gameInfo = client.readMessage();
                     JOptionPane.showMessageDialog(null, response);
-                    if (response.startsWith("Game created successfully")) {
+                    
+                    if (response.startsWith("Game created successfully") && !"".equals(gameInfo)) {
                         currentPlayerName = playerName;
                         currentGame = gson.fromJson(gameInfo, Game.class);
-                        // Reset currentGame State
-                        mainPanel.remove(mainPanel.getComponent(2));
+                        
+                        // ลบ game panel เก่า
+                        try {
+                            mainPanel.remove(2);
+                        } catch (Exception ex) {
+                            // ignore
+                        }
+                        
                         JPanel gamePage = createGamePage();
                         mainPanel.add(gamePage, "Game");
                         cardLayout.show(mainPanel, "Game");
+                        
+                        // เริ่ม listening thread
                         startListeningFromServer();
                     }
-                    
-                    // client.close();
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(null, "Failed to connect to server.");
                     ex.printStackTrace();
+                    
+                    // ปิด connection ที่มีปัญหา
+                    try {
+                        if (client != null) {
+                            client.close();
+                            client = null;
+                        }
+                    } catch (Exception closeEx) {
+                        // ignore
+                    }
                 }
             });
 
@@ -186,26 +245,58 @@
                 }
                 if (roomId != null && !roomId.isEmpty()) {
                     try {
-                    if (client == null) {
-                            client = new ClientSocket("localhost", 12345); // สร้างแค่ครั้งเดียว
+                        // สร้าง connection ใหม่หรือใช้ connection เดิม
+                        if (client == null) {
+                            client = new ClientSocket("localhost", 12345);
                         }
+                        
+                        System.out.println("Attempting to join game: " + roomId + " with player: " + playerName);
+                        
                         client.sendMessage("JOIN:" + playerName + ":" + roomId);
                         String response = client.readMessage();
                         String gameInfo = client.readMessage();
+                        
+                        System.out.println("Join response: " + response);
                         JOptionPane.showMessageDialog(null, response);
-                        if (response.startsWith("Joined game")) {
+                        
+                        if (response.startsWith("Joined game") && !"".equals(gameInfo)) {
                             currentPlayerName = playerName;
                             currentGame = gson.fromJson(gameInfo, Game.class);
-                            // Reset currentGame State
-                            mainPanel.remove(mainPanel.getComponent(2));
+                            
+                            // ลบ game panel เก่าออก (ถ้ามี)
+                            try {
+                                mainPanel.remove(2); // Game panel อยู่ที่ index 2
+                            } catch (Exception ex) {
+                                // ไม่ต้องทำอะไรถ้าไม่มี panel
+                            }
+                            
                             JPanel gamePage = createGamePage();
                             mainPanel.add(gamePage, "Game");
                             cardLayout.show(mainPanel, "Game");
+                            
+                            // เริ่ม listening thread ใหม่
                             startListeningFromServer();
+                            
+                            // ซ่อน join fields
+                            roomField.setVisible(false);
+                            confirmJoinButton.setVisible(false);
+                            roomField.setText(""); // เคลียร์ field
+                            panel.revalidate();
+                            panel.repaint();
                         }
-                        // client.close();
                     } catch (IOException ex) {
                         ex.printStackTrace();
+                        JOptionPane.showMessageDialog(null, "Failed to join game: " + ex.getMessage());
+                        
+                        // ปิด connection ที่มีปัญหาและสร้างใหม่
+                        try {
+                            if (client != null) {
+                                client.close();
+                                client = null;
+                            }
+                        } catch (Exception closeEx) {
+                            // ignore
+                        }
                     }
                 }
             });
@@ -227,13 +318,28 @@
             return panel;
         }
 
+        public void closeConnection() {
+            try {
+                stopListeningFromServer();
+                if (client != null) {
+                    client.close();
+                    client = null;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
         private JPanel createGamePage() {
             JPanel panel = new JPanel();
             panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-            JLabel tableLabel = new JLabel("Poker Game - Table View");
-            tableLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-            tableLabel.setFont(tableLabel.getFont().deriveFont(18.0f));
+            JLabel tableLabel = new JLabel("Poker Game" );
+            if(currentGame != null) {
+                tableLabel = new JLabel("Poker Game - " + currentGame.getGameId());
+                tableLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+                tableLabel.setFont(tableLabel.getFont().deriveFont(18.0f));
+            }
 
             // ======= Community Cards (5 Cards Mock) =======
             JPanel communityPanel = new JPanel();
@@ -291,12 +397,19 @@
 
             // ======= Back Button Action =======
             exitGameButton.addActionListener(e -> {
-                client.sendMessage("EXIT_GAME:" + currentPlayerName + ":" + currentGame.getGameId());
-                cardLayout.show(mainPanel, "Menu");
-                try {
-                    client.close();
-                } catch (IOException er) {
-                    er.printStackTrace();
+                if (currentGame != null && currentPlayerName != null) {
+                    // ส่ง leave message
+                    client.sendMessage("LEAVE_GAME:" + currentPlayerName + ":" + currentGame.getGameId());
+                    
+                    // หยุด listening thread
+                    stopListeningFromServer();
+                    
+                    // รีเซ็ต state
+                    currentGame = null;
+                    currentPlayerName = null;
+                    
+                    // กลับไปหน้า menu
+                    cardLayout.show(mainPanel, "Menu");
                 }
             });
 

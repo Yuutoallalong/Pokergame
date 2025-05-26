@@ -32,9 +32,10 @@ public class Game {
         players.remove(player);
     }
 
-    public void removePlayerByName(String name) {
-        players.removeIf(p -> p.getName().equals(name));
+    public boolean removePlayerByName(String name) {
+        return players.removeIf(p -> p.getName().equals(name));
     }
+
 
 
     public String getGameId() {
