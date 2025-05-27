@@ -66,7 +66,7 @@ public class AppGUI {
                     if (message.startsWith("UPDATE_GAME:")) {
                         String gameJson = message.substring("UPDATE_GAME:".length());
                         currentGame = gson.fromJson(gameJson, Game.class);
-
+                        System.out.println("ClientSide: " + currentGame.getCurrentPlayer().getName());
                         SwingUtilities.invokeLater(() -> {
                             // หา game panel และลบออก
                             for (int i = 0; i < mainPanel.getComponentCount(); i++) {
@@ -355,7 +355,6 @@ public class AppGUI {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(new Color(34, 45, 65)); // Dark poker table theme
         JButton startButton = new JButton("Start Game");
-
         JLabel tableLabel = new JLabel("Poker Game");
         tableLabel.setForeground(Color.WHITE);
         if (currentGame != null) {

@@ -55,6 +55,17 @@ public class Game {
         this.currentRound = Round.PREFLOP;
     }
 
+    public int getCurrentPlayerIndex() {
+        System.out.println("getCurrentPlayerIndex called, currentPlayerIndex = " + currentPlayerIndex);
+        return currentPlayerIndex;
+    }
+
+    public void setCurrentPlayerIndex(int currentPlayerIndex) {
+        System.out.println("setCurrentPlayerIndex called with: " + currentPlayerIndex);
+        Thread.dumpStack();
+        this.currentPlayerIndex = currentPlayerIndex;
+    }
+
     public boolean addPlayer(Player player) {
         if (players.size() < MAX_PLAYERS ) {
             players.add(player);
@@ -130,7 +141,8 @@ public class Game {
 
         int bigBlindPosition = (smallBlindPosition + 1) % playerCount;
         players.get(bigBlindPosition).setBigBlind(true);
-        currentPlayerIndex = (bigBlindPosition + 1) % players.size();
+        // currentPlayerIndex = (bigBlindPosition + 1) % players.size();
+        setCurrentPlayerIndex((bigBlindPosition + 1) % players.size());
     }
 
     public void rotateDealer() {
@@ -167,7 +179,8 @@ public class Game {
         deck.dealCardsFromPosition(players, smallBlindPosition, 2);
 
         int bigBlindPosition = (smallBlindPosition + 1) % players.size();
-        currentPlayerIndex = (bigBlindPosition + 1) % players.size();
+        // currentPlayerIndex = (bigBlindPosition + 1) % players.size();
+        setCurrentPlayerIndex((bigBlindPosition + 1) % players.size());
     }
 
     private void collectBlinds() {
@@ -234,18 +247,20 @@ public class Game {
                 break;
 
             case RAISE:
-                int minRaise = currentBet + lastRaiseAmount;
-                if (amount < minRaise || amount > player.getChips()) {
+                int playerCurrentBet = getPlayerBet(player);
+                int callAmountRaise = currentBet - playerCurrentBet;
+                int minRaise = callAmountRaise + lastRaiseAmount;
+                if (amount < minRaise || amount > player.getChips() + playerCurrentBet) {
                     return false;
                 }
-                int raiseAmount = amount - getPlayerBet(player);
-                player.removeChips(raiseAmount);
-                pot += raiseAmount;
-                lastRaiseAmount = amount - currentBet;
+                lastRaiseAmount = amount - callAmountRaise;
+                player.removeChips(amount - playerCurrentBet);
+                pot += amount - playerCurrentBet;
+                playerBets.put(player, amount);
                 currentBet = amount;
                 lastRaiser = player;
-                playerBets.put(player, amount);
                 break;
+
         }
 
         moveToNextPlayer();
@@ -259,36 +274,42 @@ public class Game {
 
     private void moveToNextPlayer() {
         System.out.println("moveToNextPlayer");
-        System.out.println("currentPlayerIndexBefore: " + currentPlayerIndex);
+        System.out.println("currentPlayerIndexBefore: " + getCurrentPlayerIndex());
         System.out.println("PlayersBefore: " + players);
         System.out.println("getCurrentPlayerBefore: " + getCurrentPlayer());
-        int count = 0;
+
+        if (getUnfoldPlayer().size() <= 1) {
+            isAllFolded = true;
+            return;
+        }
+
         int totalPlayers = players.size();
+        int count = 0;
 
         do {
-            this.currentPlayerIndex = (this.currentPlayerIndex + 1) % totalPlayers;
+            this.setCurrentPlayerIndex((getCurrentPlayerIndex() + 1) % totalPlayers);
+            // this.currentPlayerIndex = (this.currentPlayerIndex + 1) % totalPlayers;
             count++;
-        } while (!players.get(this.currentPlayerIndex).getIsActive() && count < totalPlayers);
+        } while (!players.get(getCurrentPlayerIndex()).getIsActive() && count < totalPlayers);
 
-        isAllFolded = count >= totalPlayers;
-        System.out.println("currentPlayerIndexAfter: " + currentPlayerIndex);
+        System.out.println("currentPlayerIndexAfter: " + getCurrentPlayerIndex());
         System.out.println("PlayersAfter: " + players);
         System.out.println("getCurrentPlayerAfter: " + getCurrentPlayer());
     }
+
 
 
     private boolean isRoundComplete() {
         if (isAllFolded) {
             return true;
         }
-        if (lastRaiser == null) {
+        if (lastRaiser == null || !lastRaiser.getIsActive()) {
             int startingPlayerIndex = (dealerPosition + 1) % players.size();
-            return currentPlayerIndex == startingPlayerIndex;
+            return getCurrentPlayerIndex() == startingPlayerIndex;
         } else {
             int lastRaiserIndex = players.indexOf(lastRaiser);
             int nextPlayerIndex = (lastRaiserIndex + 1) % players.size();
-
-            return currentPlayerIndex == nextPlayerIndex;
+            return getCurrentPlayerIndex() == nextPlayerIndex;
         }
     }
 
@@ -332,14 +353,15 @@ public class Game {
     }
 
     private void determineWinner() {
-        if (isAllFolded) {
-            List<Player> winners = getUnfoldPlayer();
-            if(winners.size() == 1){
-                winners.get(0).addChips(pot);
-                return;
-            }
-            
+       if (isAllFolded) {
+        List<Player> winners = getUnfoldPlayer();
+        if(winners.size() == 1){
+            winners.get(0).addChips(pot);
+            isAllFolded = false;
+            return;
         }
+    }
+
 
         Map<Player, PokerHand> playerHands = new HashMap<>();
 
@@ -406,19 +428,24 @@ public class Game {
                 break;
 
             case SHOWDOWN:
-
                 startNewHand();
                 break;
         }
 
         if (currentRound != Round.SHOWDOWN) {
-            currentPlayerIndex = (dealerPosition + 1) % players.size();
+            setCurrentPlayerIndex((dealerPosition + 1) % players.size());
 
-            while (players.get(currentPlayerIndex).getIsActive() == true) {
-                currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+            int totalPlayers = players.size();
+            int count = 0;
+
+            // หา player ที่ active คนถัดไป
+            while (!players.get(getCurrentPlayerIndex()).getIsActive() && count < totalPlayers) {
+                setCurrentPlayerIndex((getCurrentPlayerIndex() + 1) % totalPlayers);
+                count++;
             }
         }
     }
+
 
     private void dealFlop() {
         deck.dealCard();
@@ -439,7 +466,7 @@ public class Game {
     }
 
     public Player getCurrentPlayer() {
-        return players.get(currentPlayerIndex);
+        return players.get(getCurrentPlayerIndex());
     }
 
     public Round getCurrentRound() {

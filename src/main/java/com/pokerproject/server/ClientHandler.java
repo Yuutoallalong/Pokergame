@@ -162,9 +162,11 @@ public class ClientHandler implements Runnable {
                     Player actionPlayer = game.getPlayerByName(playerName);
                     System.out.println(actionPlayer.getName());
                     game.processPlayerAction(actionPlayer, Game.Action.FOLD, 0);
+                    System.out.println("After fold, currentPlayerIndex: " + game.getCurrentPlayerIndex());
                     System.out.println("Process Success");
-                    System.out.println(game.getCurrentPlayer().getName());
+                    System.out.println("ServerSide: " + game.getCurrentPlayer().getName());
                     String gameJsonFold = gson.toJson(game);
+                    System.out.println("FOLD: " + gameJsonFold);
                     broadcastToGame("UPDATE_GAME:" + gameJsonFold);
                     continue;
                 }
