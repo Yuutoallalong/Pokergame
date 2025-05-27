@@ -357,24 +357,37 @@ public class AppGUI {
         JButton startButton = new JButton("Start Game");
         JLabel tableLabel = new JLabel("Poker Game");
         tableLabel.setForeground(Color.WHITE);
+
+        JLabel potLabel = new JLabel();
+        potLabel.setForeground(Color.ORANGE);
+        potLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         if (currentGame != null) {
+            potLabel = new JLabel("Pot: " + currentGame.getPot());
             tableLabel = new JLabel("Poker Game - " + currentGame.getGameId());
             tableLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
             tableLabel.setFont(tableLabel.getFont().deriveFont(22.0f).deriveFont(Font.BOLD));
             tableLabel.setForeground(Color.ORANGE);
         }
-
+        
         // ======= Community Cards =======
         JPanel communityPanel = new JPanel();
         communityPanel.setBackground(new Color(34, 45, 65));
         communityPanel.setLayout(new BoxLayout(communityPanel, BoxLayout.X_AXIS));
-        if (currentGame != null && currentGame.getState() == Game.State.PLAYING) {
-            for (int i = 0; i < 5; i++) {
+        if (currentGame != null && currentGame.getState() == Game.State.PLAYING && !currentGame.getCommunityCards().isEmpty()) {
+            communityPanel.removeAll();
+            for (int i = 0; i < currentGame.getCommunityCards().size(); i++) {
                 JLabel cardLabel = new JLabel();
-                cardLabel.setIcon(loadCardImage(null)); // Default back
+                if(currentGame.getCurrentRound() != Game.Round.PREFLOP){
+                    cardLabel.setIcon(loadCardImage(currentGame.getCommunityCards().get(i)));
+                }else{
+                    cardLabel.setIcon(loadCardImage(null));
+                }
                 communityPanel.add(cardLabel);
                 communityPanel.add(Box.createHorizontalStrut(10));
             }
+            communityPanel.revalidate();
+            communityPanel.repaint();
         }
 
         communityPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -440,7 +453,7 @@ public class AppGUI {
         JPanel buttonPanel = new JPanel();
         buttonPanel.setBackground(new Color(34, 45, 65));
 
-        if (currentGame != null && currentGame.getCreaterPlayer().getName().equals(currentPlayerName) && currentGame.getPlayers().size() > 2) {
+        if (currentGame != null && currentGame.getCreaterPlayer().getName().equals(currentPlayerName) && currentGame.getPlayers().size() > 1) {
             if(currentGame.getState() == Game.State.PLAYING){
                 startButton.setEnabled(false);
             }
@@ -472,32 +485,41 @@ public class AppGUI {
             btn.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
         }
         
-        if(currentGame != null && currentGame.getState() == Game.State.WAITING){
+        if (currentGame != null && currentGame.getState() == Game.State.WAITING) {
             buttonPanel.add(startButton);
-        }else{
+        } else {
             buttonPanel.remove(startButton);
-            if(isFirst){
+
+            buttonPanel.remove(callButton);
+            buttonPanel.remove(foldButton);
+            buttonPanel.remove(betButton);
+            buttonPanel.remove(raiseButton);
+
+            if (isFirst) {
                 buttonPanel.add(callButton);
                 buttonPanel.add(foldButton);
-                buttonPanel.add(betButton);
-            }else{
-                buttonPanel.remove(callButton);
-                buttonPanel.remove(foldButton);
-                buttonPanel.remove(betButton);
+                if (currentGame.getCurrentBet() == 0) {
+                    buttonPanel.add(betButton);
+                } else {
+                    buttonPanel.add(raiseButton);
+                }
             }
-            // buttonPanel.add(callButton);
-            // buttonPanel.add(foldButton);
-            // buttonPanel.add(raiseButton);
         }
         buttonPanel.add(exitGameButton);
-
+        buttonPanel.revalidate();
+        buttonPanel.repaint();
         if(currentGame != null){
-            callButton.addActionListener(e -> client.sendMessage("CALL:" + currentGame.getGameId() + ":" + currentPlayerName));
+            callButton.addActionListener(e -> {
+                int callAmount = currentGame.getCurrentBet() - currentGame.getPlayerBet(currentGame.getPlayerByName(currentPlayerName));
+                if (callAmount <= 0) {
+                    callAmount = 0;
+                }
+                client.sendMessage("CALL:" + currentGame.getGameId() + ":" + currentPlayerName + ":" + callAmount);
+            });
             foldButton.addActionListener(e -> client.sendMessage("FOLD:" + currentGame.getGameId() + ":" + currentPlayerName));
             raiseButton.addActionListener(e -> {
                 String raiseAmount = JOptionPane.showInputDialog("Raise: ");
-                client.sendMessage("RAISE:" + currentGame.getGameId() + ":" + currentPlayerName + ":" + raiseAmount);
-                
+                client.sendMessage("RAISE:" + currentGame.getGameId() + ":" + currentPlayerName + ":" + raiseAmount);   
             });
             checkButton.addActionListener(e -> client.sendMessage("CHECK:" + currentGame.getGameId() + ":" + currentPlayerName));
             betButton.addActionListener(e -> {
@@ -520,7 +542,9 @@ public class AppGUI {
         // ======= Assemble =======
         panel.add(Box.createVerticalStrut(20));
         panel.add(tableLabel);
-        panel.add(Box.createVerticalStrut(15));
+        panel.add(Box.createVerticalStrut(20));
+        panel.add(potLabel);
+        panel.add(Box.createVerticalStrut(15)); 
         panel.add(communityPanel);
         panel.add(Box.createVerticalStrut(20));
         panel.add(playersPanel);

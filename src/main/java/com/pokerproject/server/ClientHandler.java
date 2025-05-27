@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.Gson;
-import com.pokerproject.model.Deck;
 import com.pokerproject.model.Game;
 import com.pokerproject.model.JoinGameResult;
 import com.pokerproject.model.Player;
@@ -143,14 +142,10 @@ public class ClientHandler implements Runnable {
                     String gameId = startParts[1];
                     Game game = GameManager.getInstance().getGame(gameId);
                     game.setState(Game.State.PLAYING);
-
-                    Deck deck = game.getDeck();
-                    deck.shuffle();
-
-                    List<Player> players = game.getPlayers();
-
-                    deck.dealCardsFromPosition(players, 0, 2);
+                    game.getDeck().shuffle();
                     game.initializeFirstDealer();
+                    List<Player> players = game.getPlayers();
+                    game.getDeck().dealCardsFromPosition(players, 0, 2);
                     String gameJson = gson.toJson(game);
                     broadcastToGame("UPDATE_GAME:" + gameJson);
                     continue;
@@ -169,7 +164,53 @@ public class ClientHandler implements Runnable {
                     System.out.println("FOLD: " + gameJsonFold);
                     broadcastToGame("UPDATE_GAME:" + gameJsonFold);
                     continue;
-                }
+                } else if (message.startsWith("CHECK:")) {
+                    String[] foldParts = message.split(":", 3);
+                    String gameId = foldParts[1];
+                    String playerName = foldParts[2];
+                    Game game = GameManager.getInstance().getGame(gameId);
+                    Player actionPlayer = game.getPlayerByName(playerName);
+                    game.processPlayerAction(actionPlayer, Game.Action.CHECK, 0);
+                    String gameJsonFold = gson.toJson(game);
+                    broadcastToGame("UPDATE_GAME:" + gameJsonFold);
+                    continue;
+                } else if (message.startsWith("CALL:")) {
+                    String[] foldParts = message.split(":", 4);
+                    String gameId = foldParts[1];
+                    String playerName = foldParts[2];
+                    String callAmountStr = foldParts[3];
+                    int callAmount = Integer.parseInt(callAmountStr);
+                    Game game = GameManager.getInstance().getGame(gameId);
+                    Player actionPlayer = game.getPlayerByName(playerName);
+                    game.processPlayerAction(actionPlayer, Game.Action.CALL, callAmount);
+                    String gameJsonFold = gson.toJson(game);
+                    broadcastToGame("UPDATE_GAME:" + gameJsonFold);
+                    continue;
+                } else if (message.startsWith("BET:")) {
+                    String[] foldParts = message.split(":", 4);
+                    String gameId = foldParts[1];
+                    String playerName = foldParts[2];
+                    String betAmountStr = foldParts[3];
+                    int betAmount = Integer.parseInt(betAmountStr);
+                    Game game = GameManager.getInstance().getGame(gameId);
+                    Player actionPlayer = game.getPlayerByName(playerName);
+                    game.processPlayerAction(actionPlayer, Game.Action.BET, betAmount);
+                    String gameJsonFold = gson.toJson(game);
+                    broadcastToGame("UPDATE_GAME:" + gameJsonFold);
+                    continue;
+                } else if (message.startsWith("RAISE:")) {
+                    String[] foldParts = message.split(":", 4);
+                    String gameId = foldParts[1];
+                    String playerName = foldParts[2];
+                    String raiseAmountStr = foldParts[3];
+                    int raiseAmount = Integer.parseInt(raiseAmountStr);
+                    Game game = GameManager.getInstance().getGame(gameId);
+                    Player actionPlayer = game.getPlayerByName(playerName);
+                    game.processPlayerAction(actionPlayer, Game.Action.RAISE, raiseAmount);
+                    String gameJsonFold = gson.toJson(game);
+                    broadcastToGame("UPDATE_GAME:" + gameJsonFold);
+                    continue;
+                } 
             }
         } catch (IOException e) {
             e.printStackTrace();

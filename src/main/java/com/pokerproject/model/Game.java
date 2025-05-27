@@ -34,7 +34,7 @@ public class Game {
     private int currentBet;
     private int lastRaiseAmount;
     private Player lastRaiser;
-    private Map<Player, Integer> playerBets = new HashMap<>();
+    private Map<String, Integer> playerBets = new HashMap<>();
     private State state;
     private boolean isAllFolded;
 
@@ -53,6 +53,11 @@ public class Game {
         this.state = State.WAITING;
         this.isAllFolded = false;
         this.currentRound = Round.PREFLOP;
+    }
+
+
+    public void setCommunityCards(List<Card> communityCards) {
+        this.communityCards = communityCards;
     }
 
     public int getCurrentPlayerIndex() {
@@ -190,7 +195,7 @@ public class Game {
                 player.removeChips(amount);
                 pot += amount;
                 currentBet = smallBlindAmount;
-                playerBets.put(player, amount);
+                playerBets.put(player.getName(), amount);
             }
 
             if (player.isBigBlind()) {
@@ -199,7 +204,7 @@ public class Game {
                 pot += amount;
                 currentBet = bigBlindAmount;
                 lastRaiser = player;
-                playerBets.put(player, amount);
+                playerBets.put(player.getName(), amount);
             }
         }
     }
@@ -227,7 +232,7 @@ public class Game {
                     callAmount = Math.min(callAmount, player.getChips());
                     player.removeChips(callAmount);
                     pot += callAmount;
-                    playerBets.put(player, getPlayerBet(player) + callAmount);
+                    playerBets.put(player.getName(), getPlayerBet(player) + callAmount);
                 }
                 break;
 
@@ -243,24 +248,24 @@ public class Game {
                 currentBet = amount;
                 lastRaiseAmount = amount;
                 lastRaiser = player;
-                playerBets.put(player, amount);
+                playerBets.put(player.getName(), amount);
                 break;
 
             case RAISE:
                 int playerCurrentBet = getPlayerBet(player);
                 int callAmountRaise = currentBet - playerCurrentBet;
                 int minRaise = callAmountRaise + lastRaiseAmount;
-                if (amount < minRaise || amount > player.getChips() + playerCurrentBet) {
+                int raiseAmount = amount - playerCurrentBet;
+                if (amount < minRaise || raiseAmount > player.getChips()) {
                     return false;
                 }
-                lastRaiseAmount = amount - callAmountRaise;
-                player.removeChips(amount - playerCurrentBet);
-                pot += amount - playerCurrentBet;
-                playerBets.put(player, amount);
+                lastRaiseAmount = raiseAmount;
+                player.removeChips(raiseAmount);
+                pot += raiseAmount;
+                playerBets.put(player.getName(), amount);
                 currentBet = amount;
                 lastRaiser = player;
                 break;
-
         }
 
         moveToNextPlayer();
@@ -481,7 +486,7 @@ public class Game {
         return pot;
     }
 
-    private int getPlayerBet(Player player) {
+    public int getPlayerBet(Player player) {
         return playerBets.getOrDefault(player, 0);
     }
 
