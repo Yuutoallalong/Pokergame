@@ -49,7 +49,6 @@ public class ClientHandler implements Runnable {
                     this.player = new Player(playerName, this, true);
                     GameManager manager = GameManager.getInstance();
                     currentGame = manager.createGame(player);
-                    System.out.println("CREATE GAME: " + currentGame);
                     String gameJson = gson.toJson(currentGame);
                     String gameId = currentGame.getGameId();
                     out.println("Game created successfully! Game ID: " + gameId);
@@ -59,7 +58,6 @@ public class ClientHandler implements Runnable {
                     String playerName = parts[1];
                     String gameId = parts[2];
                     if (playerName == null || playerName.trim().isEmpty()) {
-                        System.out.println("Player name cannot be empty.");
                         out.println("Player name cannot be empty.");
                         out.println("");
                         continue;
@@ -67,13 +65,11 @@ public class ClientHandler implements Runnable {
                     GameManager manager = GameManager.getInstance();
                     Game game = manager.getGame(gameId);
                     if (game == null) {
-                        System.out.println("Game not found.");
                         out.println("Game not found.");
                         out.println("");
                         continue;
                     }
                     if (game.isPlayerNameExists(playerName)) {
-                        System.out.println("This name is already taken in the game.");
                         out.println("This name is already taken in the game.");
                         out.println("");
                         continue;
@@ -86,7 +82,7 @@ public class ClientHandler implements Runnable {
                         out.println("");
                         continue;
                     }
-                    System.out.println("JOIN GAME: " + currentGame);
+                    // System.out.println("JOIN GAME: " + currentGame);
                     String gameJson = gson.toJson(currentGame);
                     out.println("Joined game: " + gameId);
                     out.println(gameJson);
@@ -105,7 +101,7 @@ public class ClientHandler implements Runnable {
                     out.println("Goodbye!");
                     break;
                 } else if (message.startsWith("LEAVE_GAME:")) {
-                    System.out.println("LEAVE_GAME: " + message);
+                    // System.out.println("LEAVE_GAME: " + message);
                     String[] exitParts = message.split(":", 3);
                     if (exitParts.length < 3) {
                         out.println("Invalid LEAVE_GAME command format.");
@@ -126,7 +122,7 @@ public class ClientHandler implements Runnable {
                             String gameJson = gson.toJson(game);
                             broadcastToOthers("UPDATE_GAME:" + gameJson, playerName);
 
-                            System.out.println("Player " + playerName + " left game " + gameId);
+                            // System.out.println("Player " + playerName + " left game " + gameId);
                         } else {
                             out.println("Failed to leave game - player not found");
                         }
@@ -155,13 +151,8 @@ public class ClientHandler implements Runnable {
                     String playerName = foldParts[2];
                     Game game = GameManager.getInstance().getGame(gameId);
                     Player actionPlayer = game.getPlayerByName(playerName);
-                    System.out.println(actionPlayer.getName());
                     game.processPlayerAction(actionPlayer, Game.Action.FOLD, 0);
-                    System.out.println("After fold, currentPlayerIndex: " + game.getCurrentPlayerIndex());
-                    System.out.println("Process Success");
-                    System.out.println("ServerSide: " + game.getCurrentPlayer().getName());
                     String gameJsonFold = gson.toJson(game);
-                    System.out.println("FOLD: " + gameJsonFold);
                     broadcastToGame("UPDATE_GAME:" + gameJsonFold);
                     continue;
                 } else if (message.startsWith("CHECK:")) {
@@ -210,12 +201,22 @@ public class ClientHandler implements Runnable {
                     String gameJsonFold = gson.toJson(game);
                     broadcastToGame("UPDATE_GAME:" + gameJsonFold);
                     continue;
+                } else if (message.startsWith("NEXTGAME:")) {
+                    String[] foldParts = message.split(":", 3);
+                    String gameId = foldParts[1];
+                    String playerName = foldParts[2];
+                    Game game = GameManager.getInstance().getGame(gameId);
+                    Player actionPlayer = game.getPlayerByName(playerName);
+                    game.processPlayerAction(actionPlayer, Game.Action.NEXT, 0);
+                    String gameJsonFold = gson.toJson(game);
+                    broadcastToGame("UPDATE_GAME:" + gameJsonFold);
+                    continue;
                 } 
             }
         } catch (IOException e) {
             e.printStackTrace();
         } catch (Exception e) {
-            System.out.println(e);
+            // System.out.println(e);
         } finally {
             cleanup();
         }
@@ -258,7 +259,7 @@ public class ClientHandler implements Runnable {
             in.close();
             out.close();
             clientSocket.close();
-            System.out.println("Client disconnected");
+            // System.out.println("Client disconnected");
         } catch (IOException e) {
             e.printStackTrace();
         }

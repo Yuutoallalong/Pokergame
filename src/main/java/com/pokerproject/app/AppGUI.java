@@ -61,12 +61,12 @@ public class AppGUI {
             try {
                 String message;
                 while ((message = client.readMessage()) != null && !Thread.currentThread().isInterrupted()) {
-                    System.out.println("Received message: " + message); // Debug
+                    // System.out.println("Received message: " + message); // Debug
 
                     if (message.startsWith("UPDATE_GAME:")) {
                         String gameJson = message.substring("UPDATE_GAME:".length());
                         currentGame = gson.fromJson(gameJson, Game.class);
-                        System.out.println("ClientSide: " + currentGame.getCurrentPlayer().getName());
+                        // System.out.println("ClientSide: " + currentGame.getCurrentPlayer().getName());
                         SwingUtilities.invokeLater(() -> {
                             // หา game panel และลบออก
                             for (int i = 0; i < mainPanel.getComponentCount(); i++) {
@@ -270,13 +270,13 @@ public class AppGUI {
                         client = new ClientSocket("localhost", 12345);
                     }
 
-                    System.out.println("Attempting to join game: " + roomId + " with player: " + playerName);
+                    // System.out.println("Attempting to join game: " + roomId + " with player: " + playerName);
 
                     client.sendMessage("JOIN:" + playerName + ":" + roomId);
                     String response = client.readMessage();
                     String gameInfo = client.readMessage();
 
-                    System.out.println("Join response: " + response);
+                    // System.out.println("Join response: " + response);
                     JOptionPane.showMessageDialog(null, response);
 
                     if (response.startsWith("Joined game") && !"".equals(gameInfo)) {
@@ -362,8 +362,15 @@ public class AppGUI {
         potLabel.setForeground(Color.ORANGE);
         potLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
+        JLabel roundLabel = new JLabel();
+        roundLabel.setForeground(Color.ORANGE);
+        roundLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         if (currentGame != null) {
             potLabel = new JLabel("Pot: " + currentGame.getPot());
+            potLabel.setForeground(Color.WHITE);
+            roundLabel = new JLabel("Round: " + currentGame.getCurrentRound());
+            roundLabel.setForeground(Color.WHITE);
             tableLabel = new JLabel("Poker Game - " + currentGame.getGameId());
             tableLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
             tableLabel.setFont(tableLabel.getFont().deriveFont(22.0f).deriveFont(Font.BOLD));
@@ -421,7 +428,6 @@ public class AppGUI {
                 JLabel card1 = null;
                 JLabel card2 = null;
                 if(currentGame.getState() == Game.State.PLAYING){
-                    System.out.println(player.getHoleCards());
                     if(player.getName().equals(currentPlayerName)){
                         card1 = new JLabel(loadCardImage(player.getHoleCards().get(0)));
                         card2 = new JLabel(loadCardImage(player.getHoleCards().get(1)));
@@ -466,18 +472,15 @@ public class AppGUI {
             client.sendMessage("START_GAME:" + currentGame.getGameId());
         });
 
-        boolean isFirst = false;
-        if(currentGame != null){
-            isFirst = currentGame.getCurrentPlayer().getName().equals(currentPlayerName);
-        }
         JButton callButton = new JButton("Call");
         JButton foldButton = new JButton("Fold");
         JButton raiseButton = new JButton("Raise");
         JButton checkButton = new JButton("Check");
         JButton betButton = new JButton("Bet");
+        JButton nextGameButton = new JButton("Next game");
         JButton exitGameButton = new JButton("Exit game");
 
-        JButton[] buttons = {callButton, foldButton, raiseButton, exitGameButton, startButton};
+        JButton[] buttons = {callButton, foldButton, raiseButton, checkButton, betButton, nextGameButton, exitGameButton, startButton};
         for (JButton btn : buttons) {
             btn.setBackground(new Color(70, 130, 180));
             btn.setForeground(Color.WHITE);
@@ -485,29 +488,45 @@ public class AppGUI {
             btn.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
         }
         
-        if (currentGame != null && currentGame.getState() == Game.State.WAITING) {
-            buttonPanel.add(startButton);
-        } else {
-            buttonPanel.remove(startButton);
+        // ======= Buttton Panel =======
+        if (currentGame != null) {
+            boolean isFirst = currentGame.getCurrentPlayer().getName().equals(currentPlayerName);
+            buttonPanel.removeAll();
 
-            buttonPanel.remove(callButton);
-            buttonPanel.remove(foldButton);
-            buttonPanel.remove(betButton);
-            buttonPanel.remove(raiseButton);
+            if (currentGame.getState() == Game.State.WAITING) {
+                buttonPanel.add(startButton);
+            } else {
+                if (isFirst && currentGame.getCurrentRound() != Game.Round.SHOWDOWN) {
+                    buttonPanel.add(foldButton);
 
-            if (isFirst) {
-                buttonPanel.add(callButton);
-                buttonPanel.add(foldButton);
-                if (currentGame.getCurrentBet() == 0) {
-                    buttonPanel.add(betButton);
-                } else {
-                    buttonPanel.add(raiseButton);
+                    int currentBet = currentGame.getCurrentBet();
+                    Player currentPlayer = currentGame.getCurrentPlayer();
+                    System.out.println("####currentGame.getCurrentBet(): " + currentBet);
+
+                    if(currentGame.getPlayerBet(currentPlayer) < currentBet){
+                        buttonPanel.add(callButton);
+                    }else{
+                        buttonPanel.add(checkButton);
+                    }
+
+                    if (currentBet == 0) {
+                        buttonPanel.add(betButton);
+                    } else {
+                        buttonPanel.add(raiseButton);
+                    }
+                }
+
+                if (currentGame.getCreaterPlayer().getName().equals(currentPlayerName) && currentGame.getCurrentRound() == Game.Round.SHOWDOWN){
+                    buttonPanel.add(nextGameButton);
                 }
             }
+
+            buttonPanel.add(exitGameButton);
+            buttonPanel.revalidate();
+            buttonPanel.repaint();
         }
-        buttonPanel.add(exitGameButton);
-        buttonPanel.revalidate();
-        buttonPanel.repaint();
+
+        // ======= Action Buttons Listener =======
         if(currentGame != null){
             callButton.addActionListener(e -> {
                 int callAmount = currentGame.getCurrentBet() - currentGame.getPlayerBet(currentGame.getPlayerByName(currentPlayerName));
@@ -526,6 +545,7 @@ public class AppGUI {
                 String betAmount = JOptionPane.showInputDialog("Bet: ");
                 client.sendMessage("BET:" + currentGame.getGameId() + ":" + currentPlayerName+ ":" + betAmount);
             });
+            nextGameButton.addActionListener(e -> client.sendMessage("NEXTGAME:" + currentGame.getGameId() + ":" + currentPlayerName));
         }
 
         // ======= Back Button Action =======
@@ -544,6 +564,8 @@ public class AppGUI {
         panel.add(tableLabel);
         panel.add(Box.createVerticalStrut(20));
         panel.add(potLabel);
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(roundLabel);
         panel.add(Box.createVerticalStrut(15)); 
         panel.add(communityPanel);
         panel.add(Box.createVerticalStrut(20));

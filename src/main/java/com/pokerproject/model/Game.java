@@ -13,7 +13,7 @@ public class Game {
     }
 
     public enum Action {
-        FOLD, CHECK, CALL, BET, RAISE
+        FOLD, CHECK, CALL, BET, RAISE, NEXT
     }
 
     public enum State {
@@ -38,7 +38,6 @@ public class Game {
     private State state;
     private boolean isAllFolded;
 
-
     private static final int MAX_PLAYERS = 8;
 
     public Game(String gameId, int smallBlindAmount, int bigBlindAmount) {
@@ -61,13 +60,10 @@ public class Game {
     }
 
     public int getCurrentPlayerIndex() {
-        System.out.println("getCurrentPlayerIndex called, currentPlayerIndex = " + currentPlayerIndex);
         return currentPlayerIndex;
     }
 
     public void setCurrentPlayerIndex(int currentPlayerIndex) {
-        System.out.println("setCurrentPlayerIndex called with: " + currentPlayerIndex);
-        Thread.dumpStack();
         this.currentPlayerIndex = currentPlayerIndex;
     }
 
@@ -130,6 +126,7 @@ public class Game {
         assignPositions();
 
         this.state = State.PLAYING;
+        startNewHand();
     }
 
     private void assignPositions() {
@@ -174,6 +171,7 @@ public class Game {
 
         for (Player player : players) {
             player.clearCards();
+            player.setIsActive(true);
         }
 
         collectBlinds();
@@ -194,7 +192,7 @@ public class Game {
                 int amount = Math.min(smallBlindAmount, player.getChips());
                 player.removeChips(amount);
                 pot += amount;
-                currentBet = smallBlindAmount;
+                // currentBet = smallBlindAmount;
                 playerBets.put(player.getName(), amount);
             }
 
@@ -202,11 +200,12 @@ public class Game {
                 int amount = Math.min(bigBlindAmount, player.getChips());
                 player.removeChips(amount);
                 pot += amount;
-                currentBet = bigBlindAmount;
+                // currentBet = bigBlindAmount;
                 lastRaiser = player;
                 playerBets.put(player.getName(), amount);
             }
         }
+        currentBet = bigBlindAmount;
     }
 
     public boolean processPlayerAction(Player player, Action action, int amount) {
@@ -216,14 +215,10 @@ public class Game {
 
         switch (action) {
             case FOLD:
-                // activePlayers.remove(player);
                 player.setIsActive(false);
                 break;
 
             case CHECK:
-                if (currentBet > 0) {
-                    return false;
-                }
                 break;
 
             case CALL:
@@ -235,7 +230,7 @@ public class Game {
                     playerBets.put(player.getName(), getPlayerBet(player) + callAmount);
                 }
                 break;
-
+            
             case BET:
                 if (currentBet > 0) {
                     return false;
@@ -266,11 +261,15 @@ public class Game {
                 currentBet = amount;
                 lastRaiser = player;
                 break;
+            case NEXT:
+                break;
         }
 
-        moveToNextPlayer();
+        if(action != Action.NEXT) {
+            moveToNextPlayer();
+        }
 
-        if (isRoundComplete()) {
+        if (isRoundComplete() || action == Action.NEXT) {
             advanceToNextRound();
         }
 
@@ -280,7 +279,6 @@ public class Game {
     private void moveToNextPlayer() {
         System.out.println("moveToNextPlayer");
         System.out.println("currentPlayerIndexBefore: " + getCurrentPlayerIndex());
-        System.out.println("PlayersBefore: " + players);
         System.out.println("getCurrentPlayerBefore: " + getCurrentPlayer());
 
         if (getUnfoldPlayer().size() <= 1) {
@@ -298,7 +296,6 @@ public class Game {
         } while (!players.get(getCurrentPlayerIndex()).getIsActive() && count < totalPlayers);
 
         System.out.println("currentPlayerIndexAfter: " + getCurrentPlayerIndex());
-        System.out.println("PlayersAfter: " + players);
         System.out.println("getCurrentPlayerAfter: " + getCurrentPlayer());
     }
 
@@ -317,8 +314,6 @@ public class Game {
             return getCurrentPlayerIndex() == nextPlayerIndex;
         }
     }
-
-    
 
     private PokerHand findBestHand(List<Card> cards) {
         PokerHand bestHand = null;
@@ -358,22 +353,23 @@ public class Game {
     }
 
     private void determineWinner() {
-       if (isAllFolded) {
-        List<Player> winners = getUnfoldPlayer();
-        if(winners.size() == 1){
-            winners.get(0).addChips(pot);
-            isAllFolded = false;
-            return;
+        if (isAllFolded) {
+            List<Player> winners = getUnfoldPlayer();
+            if(winners.size() == 1){
+                winners.get(0).addChips(pot);
+                isAllFolded = false;
+                return;
+            }
         }
-    }
 
 
         Map<Player, PokerHand> playerHands = new HashMap<>();
 
         for (Player player : players) {
+            if (!player.getIsActive()) continue;
+
             List<Card> allCards = new ArrayList<>(player.getHoleCards());
             allCards.addAll(communityCards);
-
             PokerHand bestHand = findBestHand(allCards);
             playerHands.put(player, bestHand);
         }
@@ -399,13 +395,19 @@ public class Game {
             }
 
             int splitAmount = pot / tiedWinners.size();
-            for (Player tiedWinner : tiedWinners) {
-                tiedWinner.addChips(splitAmount);
+            int remainder = pot % tiedWinners.size();
+
+            for (int i = 0; i < tiedWinners.size(); i++) {
+                int extra = (i < remainder) ? 1 : 0;
+                tiedWinners.get(i).addChips(splitAmount + extra);
             }
+
         }
+        pot = 0;
     }
 
     private void advanceToNextRound() {
+        System.out.println("Advancing to next round: " + currentRound);
         currentBet = 0;
         lastRaiseAmount = bigBlindAmount;
         lastRaiser = null;
@@ -438,15 +440,18 @@ public class Game {
         }
 
         if (currentRound != Round.SHOWDOWN) {
+            System.out.println("currentPlayerIndex in advanceToNextRound before: " + currentPlayerIndex);
             setCurrentPlayerIndex((dealerPosition + 1) % players.size());
-
+            System.out.println("currentPlayerIndex in advanceToNextRound after: " + currentPlayerIndex);
             int totalPlayers = players.size();
             int count = 0;
 
             // หา player ที่ active คนถัดไป
             while (!players.get(getCurrentPlayerIndex()).getIsActive() && count < totalPlayers) {
+                System.out.println("currentPlayerIndex in advanceToNextRound LOOP before: " + currentPlayerIndex);
                 setCurrentPlayerIndex((getCurrentPlayerIndex() + 1) % totalPlayers);
                 count++;
+                System.out.println("currentPlayerIndex in advanceToNextRound LOOP after: " + currentPlayerIndex);
             }
         }
     }
@@ -487,8 +492,9 @@ public class Game {
     }
 
     public int getPlayerBet(Player player) {
-        return playerBets.getOrDefault(player, 0);
+        return playerBets.getOrDefault(player.getName(), 0);
     }
+
 
     public int getCurrentBet() {
         return currentBet;
