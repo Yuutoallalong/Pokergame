@@ -6,6 +6,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Image;
+import java.awt.Window;
 import java.io.IOException;
 
 import javax.swing.BorderFactory;
@@ -91,6 +92,12 @@ public class AppGUI {
                     } else if (message.startsWith("LEAVE_GAME_SUCCESS")) {
                         // รับ confirmation จาก server ว่า leave สำเร็จ
                         System.out.println("Leave game confirmed by server");
+                    } else if(message.startsWith("END")){
+                        
+                        Window window = SwingUtilities.getWindowAncestor(mainPanel);
+                        if (window != null) {
+                            window.dispose();
+                        }
                     }
                     // else handle ข้อความอื่น ๆ
                 }
@@ -269,10 +276,7 @@ public class AppGUI {
                     if (client == null) {
                         client = new ClientSocket("localhost", 12345);
                     }
-
-                    // System.out.println("Attempting to join game: " + roomId + " with player: " +
-                    // playerName);
-
+                    
                     client.sendMessage("JOIN:" + playerName + ":" + roomId);
                     String response = client.readMessage();
                     String gameInfo = client.readMessage();
@@ -584,13 +588,40 @@ public class AppGUI {
                     e -> client.sendMessage("FOLD:" + currentGame.getGameId() + ":" + currentPlayerName));
             raiseButton.addActionListener(e -> {
                 String raiseAmount = JOptionPane.showInputDialog("Raise: ");
-                client.sendMessage("RAISE:" + currentGame.getGameId() + ":" + currentPlayerName + ":" + raiseAmount);
+                int raiseAmountInt = 0;
+                try {
+                    raiseAmountInt = Integer.parseInt(raiseAmount);
+                } catch (NumberFormatException err) {
+                    JOptionPane.showMessageDialog(null, "Please enter a valid number!");
+                }
+                if(raiseAmountInt <= 0) {
+                    JOptionPane.showMessageDialog(null, "Raise amount must be greater than 0.");
+                }else if(raiseAmountInt > currentGame.getPlayerByName(currentPlayerName).getChips()) {
+                    JOptionPane.showMessageDialog(null, "You don't have enough chips.");
+                }else if (raiseAmountInt > currentGame.getCurrentBet()) {
+                    JOptionPane.showMessageDialog(null, "Raise amount must be greater than current bet " + currentGame.getCurrentBet());
+                }else{
+                    client.sendMessage("RAISE:" + currentGame.getGameId() + ":" + currentPlayerName + ":" + raiseAmount);
+                }
+                
             });
             checkButton.addActionListener(
                     e -> client.sendMessage("CHECK:" + currentGame.getGameId() + ":" + currentPlayerName));
             betButton.addActionListener(e -> {
                 String betAmount = JOptionPane.showInputDialog("Bet: ");
-                client.sendMessage("BET:" + currentGame.getGameId() + ":" + currentPlayerName + ":" + betAmount);
+                int betAmountInt = 0;
+                try {
+                    betAmountInt = Integer.parseInt(betAmount);
+                } catch (NumberFormatException err) {
+                    JOptionPane.showMessageDialog(null, "Please enter a valid number!");
+                }
+                if(betAmountInt <= 0) {
+                    JOptionPane.showMessageDialog(null, "Bet amount must be greater than 0.");
+                }else if(betAmountInt > currentGame.getPlayerByName(currentPlayerName).getChips()) {
+                    JOptionPane.showMessageDialog(null, "You don't have enough chips.");
+                }else{
+                    client.sendMessage("BET:" + currentGame.getGameId() + ":" + currentPlayerName + ":" + betAmount);
+                }
             });
             nextGameButton.addActionListener(
                     e -> client.sendMessage("NEXTGAME:" + currentGame.getGameId() + ":" + currentPlayerName));
@@ -604,6 +635,11 @@ public class AppGUI {
                 currentGame = null;
                 currentPlayerName = null;
                 cardLayout.show(mainPanel, "Menu");
+            }
+
+            Window window = SwingUtilities.getWindowAncestor(panel);
+            if (window != null) {
+                window.dispose();
             }
         });
 

@@ -101,7 +101,6 @@ public class ClientHandler implements Runnable {
                     out.println("Goodbye!");
                     break;
                 } else if (message.startsWith("LEAVE_GAME:")) {
-                    // System.out.println("LEAVE_GAME: " + message);
                     String[] exitParts = message.split(":", 3);
                     if (exitParts.length < 3) {
                         out.println("Invalid LEAVE_GAME command format.");
@@ -121,17 +120,14 @@ public class ClientHandler implements Runnable {
                             out.println("LEAVE_GAME_SUCCESS");
                             String gameJson = gson.toJson(game);
                             broadcastToOthers("UPDATE_GAME:" + gameJson, playerName);
-
-                            // System.out.println("Player " + playerName + " left game " + gameId);
                         } else {
                             out.println("Failed to leave game - player not found");
                         }
                     } else {
                         out.println("Game not found");
                     }
-
+                    broadcastToOthers("END:", playerName);
                     currentGame = null;
-
                     continue;
                 } else if (message.startsWith("START_GAME:")) {
                     String[] startParts = message.split(":", 2);
@@ -156,9 +152,9 @@ public class ClientHandler implements Runnable {
                     broadcastToGame("UPDATE_GAME:" + gameJsonFold);
                     continue;
                 } else if (message.startsWith("CHECK:")) {
-                    String[] foldParts = message.split(":", 3);
-                    String gameId = foldParts[1];
-                    String playerName = foldParts[2];
+                    String[] checkParts = message.split(":", 3);
+                    String gameId = checkParts[1];
+                    String playerName = checkParts[2];
                     Game game = GameManager.getInstance().getGame(gameId);
                     Player actionPlayer = game.getPlayerByName(playerName);
                     game.processPlayerAction(actionPlayer, Game.Action.CHECK, 0);
@@ -166,10 +162,10 @@ public class ClientHandler implements Runnable {
                     broadcastToGame("UPDATE_GAME:" + gameJsonFold);
                     continue;
                 } else if (message.startsWith("CALL:")) {
-                    String[] foldParts = message.split(":", 4);
-                    String gameId = foldParts[1];
-                    String playerName = foldParts[2];
-                    String callAmountStr = foldParts[3];
+                    String[] callParts = message.split(":", 4);
+                    String gameId = callParts[1];
+                    String playerName = callParts[2];
+                    String callAmountStr = callParts[3];
                     int callAmount = Integer.parseInt(callAmountStr);
                     Game game = GameManager.getInstance().getGame(gameId);
                     Player actionPlayer = game.getPlayerByName(playerName);
@@ -178,10 +174,10 @@ public class ClientHandler implements Runnable {
                     broadcastToGame("UPDATE_GAME:" + gameJsonFold);
                     continue;
                 } else if (message.startsWith("BET:")) {
-                    String[] foldParts = message.split(":", 4);
-                    String gameId = foldParts[1];
-                    String playerName = foldParts[2];
-                    String betAmountStr = foldParts[3];
+                    String[] betParts = message.split(":", 4);
+                    String gameId = betParts[1];
+                    String playerName = betParts[2];
+                    String betAmountStr = betParts[3];
                     int betAmount = Integer.parseInt(betAmountStr);
                     Game game = GameManager.getInstance().getGame(gameId);
                     Player actionPlayer = game.getPlayerByName(playerName);
@@ -190,10 +186,10 @@ public class ClientHandler implements Runnable {
                     broadcastToGame("UPDATE_GAME:" + gameJsonFold);
                     continue;
                 } else if (message.startsWith("RAISE:")) {
-                    String[] foldParts = message.split(":", 4);
-                    String gameId = foldParts[1];
-                    String playerName = foldParts[2];
-                    String raiseAmountStr = foldParts[3];
+                    String[] raiseParts = message.split(":", 4);
+                    String gameId = raiseParts[1];
+                    String playerName = raiseParts[2];
+                    String raiseAmountStr = raiseParts[3];
                     int raiseAmount = Integer.parseInt(raiseAmountStr);
                     Game game = GameManager.getInstance().getGame(gameId);
                     Player actionPlayer = game.getPlayerByName(playerName);
@@ -202,9 +198,9 @@ public class ClientHandler implements Runnable {
                     broadcastToGame("UPDATE_GAME:" + gameJsonFold);
                     continue;
                 } else if (message.startsWith("NEXTGAME:")) {
-                    String[] foldParts = message.split(":", 3);
-                    String gameId = foldParts[1];
-                    String playerName = foldParts[2];
+                    String[] nextParts = message.split(":", 3);
+                    String gameId = nextParts[1];
+                    String playerName = nextParts[2];
                     System.out.println("NEXT GAME TRIGGER " + gameId + " " + playerName);
                     Game game = GameManager.getInstance().getGame(gameId);
                     Player actionPlayer = game.getPlayerByName(playerName);
