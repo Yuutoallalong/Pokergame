@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Random;
 
 public class Deck {
-    private List<Card> cards;
+    private final List<Card> cards;
     private transient final Random random;
 
     public Deck() {

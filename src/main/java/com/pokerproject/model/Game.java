@@ -20,21 +20,21 @@ public class Game {
         WAITING, PLAYING
     }
 
-    private String gameId;
-    private List<Player> players;
+    private final String gameId;
+    private final List<Player> players;
     // private List<Player> activePlayers;
-    private Deck deck;
+    private final Deck deck;
     private int dealerPosition;
     private int currentPlayerIndex;
-    private int smallBlindAmount;
-    private int bigBlindAmount;
+    private final int smallBlindAmount;
+    private final int bigBlindAmount;
     private Round currentRound;
     private List<Card> communityCards;
     private int pot;
     private int currentBet;
     private int lastRaiseAmount;
     private Player lastRaiser;
-    private Map<String, Integer> playerBets = new HashMap<>();
+    private final Map<String, Integer> playerBets = new HashMap<>();
     private State state;
     private boolean isAllFolded;
 

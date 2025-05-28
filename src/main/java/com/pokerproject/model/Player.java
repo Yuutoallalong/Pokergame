@@ -6,14 +6,14 @@ import java.util.List;
 import com.pokerproject.server.ClientHandler;
 
 public class Player {
-    private String name;
-    private List<Card> holeCards;
+    private final String name;
+    private final List<Card> holeCards;
     private int chips;
     private boolean isDealer;
     private boolean isSmallBlind;
     private boolean isBigBlind;
     private boolean isActive; //current player
-    private transient ClientHandler handler;
+    private final transient ClientHandler handler;
 
     public boolean isCreater;
     
