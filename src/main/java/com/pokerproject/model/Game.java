@@ -53,6 +53,7 @@ public class Game {
         this.state = State.WAITING;
         this.isAllFolded = false;
         this.currentRound = Round.PREFLOP;
+        this.winner = null;
     }
 
 
@@ -445,22 +446,22 @@ public class Game {
             playerHands.put(player, bestHand);
         }
 
-        Player winner = null;
+        Player winnerLocal = null;
         PokerHand bestHand = null;
 
         for (Map.Entry<Player, PokerHand> entry : playerHands.entrySet()) {
             if (bestHand == null || entry.getValue().compareTo(bestHand) > 0) {
-                winner = entry.getKey();
+                winnerLocal = entry.getKey();
                 bestHand = entry.getValue();
             }
         }
 
         List<Player> tiedWinners = new ArrayList<>();
-        if (winner != null) {
-            tiedWinners.add(winner);
+        if (winnerLocal != null) {
+            tiedWinners.add(winnerLocal);
 
             for (Map.Entry<Player, PokerHand> entry : playerHands.entrySet()) {
-                if (entry.getKey() != winner && entry.getValue().compareTo(bestHand) == 0) {
+                if (entry.getKey() != winnerLocal && entry.getValue().compareTo(bestHand) == 0) {
                     tiedWinners.add(entry.getKey());
                 }
             }
@@ -472,11 +473,10 @@ public class Game {
                 int extra = (i < remainder) ? 1 : 0;
                 tiedWinners.get(i).addChips(splitAmount + extra);
             }
+
+            tiedWinners.add(winnerLocal);
+            this.winner = winnerLocal;
             
-            if (winner != null) {
-                tiedWinners.add(winner);
-                this.winner = winner;
-            }
         pot = 0;
 
         System.out.println("Final winner determined: " + (this.winner != null ? this.winner.getName() : "null"));

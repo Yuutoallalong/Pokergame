@@ -413,9 +413,20 @@ public class AppGUI {
                 playerRow.setLayout(new BoxLayout(playerRow, BoxLayout.X_AXIS));
                 playerRow.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-                JLabel playerLabel = new JLabel(player.getName() + " - " + getPlayerRole(player));
+                String labelMessage = player.getName() + " - " + getPlayerRole(player);
+
                 if (player.getName().equals(currentPlayerName)) {
-                    playerLabel.setForeground(Color.BLUE);
+                    labelMessage += " (You)";
+                }
+
+                if(currentGame.getWinner() != null && player.getName().equals(currentGame.getWinner().getName())){
+                    labelMessage += "🥇";
+                }
+
+                JLabel playerLabel = new JLabel(labelMessage);
+
+                if (player.getName().equals(currentPlayerName)) {
+                    playerLabel.setForeground(new Color(255, 215, 0)); 
                     playerLabel.setFont(playerLabel.getFont().deriveFont(Font.BOLD, 14f));
                 } else {
                     playerLabel.setForeground(Color.WHITE);
@@ -430,22 +441,12 @@ public class AppGUI {
                 JLabel card1 = null;
                 JLabel card2 = null;
                 if (currentGame.getState() == Game.State.PLAYING) {
-                    if (currentGame.getCurrentRound() == Game.Round.SHOWDOWN) {
-                        System.out.println("SHOWDOWN UI - Player: " + player.getName() +
-                                ", Current player: " + currentPlayerName +
-                                ", Winner: "
-                                + (currentGame.getWinner() != null ? currentGame.getWinner().getName() : "null") +
-                                ", Is winner: " + (player.equals(currentGame.getWinner())));
-
-                        // แสดงไพ่ของตัวเองและผู้ชนะเสมอ
-                        if (player.getName().equals(currentPlayerName) || player.equals(currentGame.getWinner())) {
+                    if (currentGame.getCurrentRound() == Game.Round.SHOWDOWN) {             
+                        if (player.getName().equals(currentPlayerName) || player.getName().equals(currentGame.getWinner().getName())) {
                             if (player.getHoleCards() != null && player.getHoleCards().size() >= 2) {
                                 card1 = new JLabel(loadCardImage(player.getHoleCards().get(0)));
-                                card2 = new JLabel(loadCardImage(player.getHoleCards().get(1)));
-                                System.out.println("Showing cards for " + player.getName());
+                                card2 = new JLabel(loadCardImage(player.getHoleCards().get(1)));        
                             } else {
-                                System.out.println(
-                                        "WARNING: Player " + player.getName() + " has no cards or less than 2 cards");
                                 card1 = new JLabel(loadCardImage(null));
                                 card2 = new JLabel(loadCardImage(null));
                             }
