@@ -234,12 +234,12 @@ public class Game {
                 break;
             
             case BET:
-                if (currentBet > 0) {
-                    return false;
-                }
-                if (amount < bigBlindAmount || amount > player.getChips()) {
-                    return false;
-                }
+                // if (currentBet > 0) {
+                //     return false;
+                // }
+                // if (amount < bigBlindAmount || amount > player.getChips()) {
+                //     return false;
+                // }
                 player.removeChips(amount);
                 pot += amount;
                 currentBet = amount;
@@ -311,12 +311,24 @@ public class Game {
 
         if (lastRaiser == null || !lastRaiser.getIsActive()) {
             int startingPlayerIndex = getNextActivePlayerIndex(dealerPosition);
-            return getCurrentPlayerIndex() == startingPlayerIndex;
+            return getCurrentPlayerIndex() == startingPlayerIndex && hasEveryoneMaturedCurrentBet();
         } else {
             int lastRaiserIndex = players.indexOf(lastRaiser);
             int nextActivePlayerIndex = getNextActivePlayerIndex(lastRaiserIndex);
-            return getCurrentPlayerIndex() == nextActivePlayerIndex;
+            return getCurrentPlayerIndex() == nextActivePlayerIndex && hasEveryoneMaturedCurrentBet();
         }
+    }
+
+    private boolean hasEveryoneMaturedCurrentBet() {
+        for (Player player : players) {
+            if (player.getIsActive()) {
+                int playerBetAmount = getPlayerBet(player);
+                if (playerBetAmount < currentBet && player.getChips() > 0) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     private int getNextActivePlayerIndex(int fromIndex) {

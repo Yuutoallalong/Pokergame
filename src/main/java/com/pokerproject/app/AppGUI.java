@@ -472,7 +472,7 @@ public class AppGUI {
             client.sendMessage("START_GAME:" + currentGame.getGameId());
         });
 
-        JButton callButton = new JButton("Call");
+        JButton callButton = new JButton();
         JButton foldButton = new JButton("Fold");
         JButton raiseButton = new JButton("Raise");
         JButton checkButton = new JButton("Check");
@@ -480,7 +480,7 @@ public class AppGUI {
         JButton nextGameButton = new JButton("Next game");
         JButton exitGameButton = new JButton("Exit game");
 
-        JButton[] buttons = {callButton, foldButton, raiseButton, checkButton, betButton, nextGameButton, exitGameButton, startButton};
+        JButton[] buttons = {foldButton, raiseButton, checkButton, betButton, nextGameButton, exitGameButton, startButton};
         for (JButton btn : buttons) {
             btn.setBackground(new Color(70, 130, 180));
             btn.setForeground(Color.WHITE);
@@ -490,6 +490,14 @@ public class AppGUI {
         
         // ======= Buttton Panel =======
         if (currentGame != null) {
+
+            int callAmount = currentGame.getCurrentBet() - currentGame.getPlayerBet(currentGame.getCurrentPlayer());
+            callButton = new JButton("Call (" + callAmount + ")");
+            callButton.setBackground(new Color(70, 130, 180));
+            callButton.setForeground(Color.WHITE);
+            callButton.setFocusPainted(false);
+            callButton.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
+
             boolean isFirst = currentGame.getCurrentPlayer().getName().equals(currentPlayerName);
             buttonPanel.removeAll();
 
@@ -501,8 +509,6 @@ public class AppGUI {
 
                     int currentBet = currentGame.getCurrentBet();
                     Player currentPlayer = currentGame.getCurrentPlayer();
-                    System.out.println("####currentGame.getCurrentBet(): " + currentBet);
-
                     if(currentGame.getPlayerBet(currentPlayer) < currentBet){
                         buttonPanel.add(callButton);
                     }else{
