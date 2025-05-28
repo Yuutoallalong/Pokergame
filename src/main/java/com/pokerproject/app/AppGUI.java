@@ -41,18 +41,17 @@ public class AppGUI {
         new AppGUI().createAndShowGUI();
     }
 
-    public static String getPlayerRole(Player player){
-        if(player.isDealer()){
+    public static String getPlayerRole(Player player) {
+        if (player.isDealer()) {
             return "Dealer";
-        }else if(player.isSmallBlind()){
+        } else if (player.isSmallBlind()) {
             return "Small Blind";
-        }else if(player.isBigBlind()){
+        } else if (player.isBigBlind()) {
             return "Big Blind";
-        }else{
+        } else {
             return "";
         }
     }
-
 
     private void startListeningFromServer() {
         stopListeningFromServer();
@@ -66,7 +65,8 @@ public class AppGUI {
                     if (message.startsWith("UPDATE_GAME:")) {
                         String gameJson = message.substring("UPDATE_GAME:".length());
                         currentGame = gson.fromJson(gameJson, Game.class);
-                        // System.out.println("ClientSide: " + currentGame.getCurrentPlayer().getName());
+                        // System.out.println("ClientSide: " +
+                        // currentGame.getCurrentPlayer().getName());
                         SwingUtilities.invokeLater(() -> {
                             // หา game panel และลบออก
                             for (int i = 0; i < mainPanel.getComponentCount(); i++) {
@@ -270,7 +270,8 @@ public class AppGUI {
                         client = new ClientSocket("localhost", 12345);
                     }
 
-                    // System.out.println("Attempting to join game: " + roomId + " with player: " + playerName);
+                    // System.out.println("Attempting to join game: " + roomId + " with player: " +
+                    // playerName);
 
                     client.sendMessage("JOIN:" + playerName + ":" + roomId);
                     String response = client.readMessage();
@@ -376,18 +377,19 @@ public class AppGUI {
             tableLabel.setFont(tableLabel.getFont().deriveFont(22.0f).deriveFont(Font.BOLD));
             tableLabel.setForeground(Color.ORANGE);
         }
-        
+
         // ======= Community Cards =======
         JPanel communityPanel = new JPanel();
         communityPanel.setBackground(new Color(34, 45, 65));
         communityPanel.setLayout(new BoxLayout(communityPanel, BoxLayout.X_AXIS));
-        if (currentGame != null && currentGame.getState() == Game.State.PLAYING && !currentGame.getCommunityCards().isEmpty()) {
+        if (currentGame != null && currentGame.getState() == Game.State.PLAYING
+                && !currentGame.getCommunityCards().isEmpty()) {
             communityPanel.removeAll();
             for (int i = 0; i < currentGame.getCommunityCards().size(); i++) {
                 JLabel cardLabel = new JLabel();
-                if(currentGame.getCurrentRound() != Game.Round.PREFLOP){
+                if (currentGame.getCurrentRound() != Game.Round.PREFLOP) {
                     cardLabel.setIcon(loadCardImage(currentGame.getCommunityCards().get(i)));
-                }else{
+                } else {
                     cardLabel.setIcon(loadCardImage(null));
                 }
                 communityPanel.add(cardLabel);
@@ -412,10 +414,10 @@ public class AppGUI {
                 playerRow.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
                 JLabel playerLabel = new JLabel(player.getName() + " - " + getPlayerRole(player));
-                if(player.getName().equals(currentPlayerName)){
+                if (player.getName().equals(currentPlayerName)) {
                     playerLabel.setForeground(Color.BLUE);
                     playerLabel.setFont(playerLabel.getFont().deriveFont(Font.BOLD, 14f));
-                }else{
+                } else {
                     playerLabel.setForeground(Color.WHITE);
                     playerLabel.setFont(playerLabel.getFont().deriveFont(Font.PLAIN, 14f));
                 }
@@ -427,16 +429,46 @@ public class AppGUI {
 
                 JLabel card1 = null;
                 JLabel card2 = null;
-                if(currentGame.getState() == Game.State.PLAYING){
-                    if(player.getName().equals(currentPlayerName)){
-                        card1 = new JLabel(loadCardImage(player.getHoleCards().get(0)));
-                        card2 = new JLabel(loadCardImage(player.getHoleCards().get(1)));
-                    }else {
-                        card1 = new JLabel(loadCardImage(null));
-                        card2 = new JLabel(loadCardImage(null));
+                if (currentGame.getState() == Game.State.PLAYING) {
+                    if (currentGame.getCurrentRound() == Game.Round.SHOWDOWN) {
+                        System.out.println("SHOWDOWN UI - Player: " + player.getName() +
+                                ", Current player: " + currentPlayerName +
+                                ", Winner: "
+                                + (currentGame.getWinner() != null ? currentGame.getWinner().getName() : "null") +
+                                ", Is winner: " + (player.equals(currentGame.getWinner())));
+
+                        // แสดงไพ่ของตัวเองและผู้ชนะเสมอ
+                        if (player.getName().equals(currentPlayerName) || player.equals(currentGame.getWinner())) {
+                            if (player.getHoleCards() != null && player.getHoleCards().size() >= 2) {
+                                card1 = new JLabel(loadCardImage(player.getHoleCards().get(0)));
+                                card2 = new JLabel(loadCardImage(player.getHoleCards().get(1)));
+                                System.out.println("Showing cards for " + player.getName());
+                            } else {
+                                System.out.println(
+                                        "WARNING: Player " + player.getName() + " has no cards or less than 2 cards");
+                                card1 = new JLabel(loadCardImage(null));
+                                card2 = new JLabel(loadCardImage(null));
+                            }
+                        } else {
+                            card1 = new JLabel(loadCardImage(null));
+                            card2 = new JLabel(loadCardImage(null));
+                        }
+
+                        playerRow.add(card1);
+                        playerRow.add(card2);
+                        
+                    } else {
+                        // รอบปกติ แสดงไพ่ของตัวเองเท่านั้น
+                        if (player.getName().equals(currentPlayerName)) {
+                            card1 = new JLabel(loadCardImage(player.getHoleCards().get(0)));
+                            card2 = new JLabel(loadCardImage(player.getHoleCards().get(1)));
+                        } else {
+                            card1 = new JLabel(loadCardImage(null));
+                            card2 = new JLabel(loadCardImage(null));
+                        }
+                        playerRow.add(card1);
+                        playerRow.add(card2);
                     }
-                    playerRow.add(card1);
-                    playerRow.add(card2);
                 }
 
                 JLabel chips = new JLabel("Chips: " + player.getChips());
@@ -444,9 +476,11 @@ public class AppGUI {
 
                 playerRow.add(playerLabel);
                 playerRow.add(Box.createHorizontalStrut(10));
-                if(currentGame.getState() == Game.State.PLAYING && card1 != null) playerRow.add(card1);
+                if (currentGame.getState() == Game.State.PLAYING && card1 != null)
+                    playerRow.add(card1);
                 playerRow.add(Box.createHorizontalStrut(10));
-                if(currentGame.getState() == Game.State.PLAYING && card2 != null) playerRow.add(card2);
+                if (currentGame.getState() == Game.State.PLAYING && card2 != null)
+                    playerRow.add(card2);
                 playerRow.add(Box.createHorizontalGlue());
                 playerRow.add(chips);
 
@@ -459,8 +493,9 @@ public class AppGUI {
         JPanel buttonPanel = new JPanel();
         buttonPanel.setBackground(new Color(34, 45, 65));
 
-        if (currentGame != null && currentGame.getCreaterPlayer().getName().equals(currentPlayerName) && currentGame.getPlayers().size() > 1) {
-            if(currentGame.getState() == Game.State.PLAYING){
+        if (currentGame != null && currentGame.getCreaterPlayer().getName().equals(currentPlayerName)
+                && currentGame.getPlayers().size() > 1) {
+            if (currentGame.getState() == Game.State.PLAYING) {
                 startButton.setEnabled(false);
             }
             startButton.setEnabled(true);
@@ -480,14 +515,15 @@ public class AppGUI {
         JButton nextGameButton = new JButton("Next game");
         JButton exitGameButton = new JButton("Exit game");
 
-        JButton[] buttons = {foldButton, raiseButton, checkButton, betButton, nextGameButton, exitGameButton, startButton};
+        JButton[] buttons = { foldButton, raiseButton, checkButton, betButton, nextGameButton, exitGameButton,
+                startButton };
         for (JButton btn : buttons) {
             btn.setBackground(new Color(70, 130, 180));
             btn.setForeground(Color.WHITE);
             btn.setFocusPainted(false);
             btn.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
         }
-        
+
         // ======= Buttton Panel =======
         if (currentGame != null) {
 
@@ -509,9 +545,9 @@ public class AppGUI {
 
                     int currentBet = currentGame.getCurrentBet();
                     Player currentPlayer = currentGame.getCurrentPlayer();
-                    if(currentGame.getPlayerBet(currentPlayer) < currentBet){
+                    if (currentGame.getPlayerBet(currentPlayer) < currentBet) {
                         buttonPanel.add(callButton);
-                    }else{
+                    } else {
                         buttonPanel.add(checkButton);
                     }
 
@@ -522,7 +558,8 @@ public class AppGUI {
                     }
                 }
 
-                if (currentGame.getCreaterPlayer().getName().equals(currentPlayerName) && currentGame.getCurrentRound() == Game.Round.SHOWDOWN){
+                if (currentGame.getCreaterPlayer().getName().equals(currentPlayerName)
+                        && currentGame.getCurrentRound() == Game.Round.SHOWDOWN) {
                     buttonPanel.add(nextGameButton);
                 }
             }
@@ -533,25 +570,29 @@ public class AppGUI {
         }
 
         // ======= Action Buttons Listener =======
-        if(currentGame != null){
+        if (currentGame != null) {
             callButton.addActionListener(e -> {
-                int callAmount = currentGame.getCurrentBet() - currentGame.getPlayerBet(currentGame.getPlayerByName(currentPlayerName));
+                int callAmount = currentGame.getCurrentBet()
+                        - currentGame.getPlayerBet(currentGame.getPlayerByName(currentPlayerName));
                 if (callAmount <= 0) {
                     callAmount = 0;
                 }
                 client.sendMessage("CALL:" + currentGame.getGameId() + ":" + currentPlayerName + ":" + callAmount);
             });
-            foldButton.addActionListener(e -> client.sendMessage("FOLD:" + currentGame.getGameId() + ":" + currentPlayerName));
+            foldButton.addActionListener(
+                    e -> client.sendMessage("FOLD:" + currentGame.getGameId() + ":" + currentPlayerName));
             raiseButton.addActionListener(e -> {
                 String raiseAmount = JOptionPane.showInputDialog("Raise: ");
-                client.sendMessage("RAISE:" + currentGame.getGameId() + ":" + currentPlayerName + ":" + raiseAmount);   
+                client.sendMessage("RAISE:" + currentGame.getGameId() + ":" + currentPlayerName + ":" + raiseAmount);
             });
-            checkButton.addActionListener(e -> client.sendMessage("CHECK:" + currentGame.getGameId() + ":" + currentPlayerName));
+            checkButton.addActionListener(
+                    e -> client.sendMessage("CHECK:" + currentGame.getGameId() + ":" + currentPlayerName));
             betButton.addActionListener(e -> {
                 String betAmount = JOptionPane.showInputDialog("Bet: ");
-                client.sendMessage("BET:" + currentGame.getGameId() + ":" + currentPlayerName+ ":" + betAmount);
+                client.sendMessage("BET:" + currentGame.getGameId() + ":" + currentPlayerName + ":" + betAmount);
             });
-            nextGameButton.addActionListener(e -> client.sendMessage("NEXTGAME:" + currentGame.getGameId() + ":" + currentPlayerName));
+            nextGameButton.addActionListener(
+                    e -> client.sendMessage("NEXTGAME:" + currentGame.getGameId() + ":" + currentPlayerName));
         }
 
         // ======= Back Button Action =======
@@ -572,7 +613,7 @@ public class AppGUI {
         panel.add(potLabel);
         panel.add(Box.createVerticalStrut(10));
         panel.add(roundLabel);
-        panel.add(Box.createVerticalStrut(15)); 
+        panel.add(Box.createVerticalStrut(15));
         panel.add(communityPanel);
         panel.add(Box.createVerticalStrut(20));
         panel.add(playersPanel);
@@ -583,11 +624,11 @@ public class AppGUI {
         return panel;
     }
 
-// ======= Load Card Image Helper =======
+    // ======= Load Card Image Helper =======
     private ImageIcon loadCardImage(Card card) {
         String path;
         if (card == null) {
-            path = "/images/cards/card_back.png";  // default card
+            path = "/images/cards/card_back.png"; // default card
         } else {
             String rank = card.getRank().toString().toLowerCase();
             String suit = card.getSuit().toString().toLowerCase();
@@ -595,14 +636,13 @@ public class AppGUI {
         }
 
         try {
-            Image img = new ImageIcon(getClass().getResource(path)).getImage().getScaledInstance(60, 90, Image.SCALE_SMOOTH);
+            Image img = new ImageIcon(getClass().getResource(path)).getImage().getScaledInstance(60, 90,
+                    Image.SCALE_SMOOTH);
             return new ImageIcon(img);
         } catch (Exception e) {
             System.err.println("Error loading image: " + path);
             return new ImageIcon(); // fallback เป็น icon เปล่า
         }
     }
-
-
 
 }

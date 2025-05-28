@@ -37,6 +37,7 @@ public class Game {
     private final Map<String, Integer> playerBets = new HashMap<>();
     private State state;
     private boolean isAllFolded;
+    private Player winner;
 
     private static final int MAX_PLAYERS = 8;
 
@@ -417,12 +418,16 @@ public class Game {
     }
 
     private void determineWinner() {
+        this.winner = null;
+        
         if (isAllFolded) {
             System.out.println("determineWinner AllFolded");
             List<Player> winners = getUnfoldPlayer();
             if(winners.size() == 1){
                 winners.get(0).addChips(pot);
                 pot = 0;
+                this.winner = winners.get(0);
+                System.out.println("Winner (all folded): " + this.winner.getName());
                 isAllFolded = false;
                 return;
             }
@@ -467,9 +472,15 @@ public class Game {
                 int extra = (i < remainder) ? 1 : 0;
                 tiedWinners.get(i).addChips(splitAmount + extra);
             }
-
-        }
+            
+            if (winner != null) {
+                tiedWinners.add(winner);
+                this.winner = winner;
+            }
         pot = 0;
+
+        System.out.println("Final winner determined: " + (this.winner != null ? this.winner.getName() : "null"));
+        }
     }
 
     private void advanceToNextRound() {
@@ -593,5 +604,9 @@ public class Game {
         int smallBlindPosition = (dealerPosition + 1) % players.size();
         int bigBlindPosition = (smallBlindPosition + 1) % players.size();
         return players.get(bigBlindPosition);
+    }
+
+    public Player getWinner() {
+        return winner;
     }
 }
