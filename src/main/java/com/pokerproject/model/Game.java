@@ -161,6 +161,7 @@ public class Game {
         currentBet = 0;
         lastRaiseAmount = 0;
         lastRaiser = null;
+        isAllFolded = false;
         communityCards.clear();
         // activePlayers.clear();
         // activePlayers.addAll(players);
@@ -209,7 +210,8 @@ public class Game {
     }
 
     public boolean processPlayerAction(Player player, Action action, int amount) {
-        if (player != getCurrentPlayer()) {
+        if (player != getCurrentPlayer() && action != Action.NEXT) {
+            System.out.println("Player " + player.getName() + " is not the current player.");
             return false;
         }
 
@@ -262,14 +264,17 @@ public class Game {
                 lastRaiser = player;
                 break;
             case NEXT:
+                System.out.println("IN CASE NEXT");
                 break;
         }
 
         if(action != Action.NEXT) {
+            System.out.println("MOVE TO NEXT PLAYER");
             moveToNextPlayer();
         }
 
         if (isRoundComplete() || action == Action.NEXT) {
+            System.out.println("IN ADVANCE TO NEXT ROUND");
             advanceToNextRound();
         }
 
@@ -299,21 +304,34 @@ public class Game {
         System.out.println("getCurrentPlayerAfter: " + getCurrentPlayer());
     }
 
-
-
     private boolean isRoundComplete() {
         if (isAllFolded) {
             return true;
         }
+
         if (lastRaiser == null || !lastRaiser.getIsActive()) {
-            int startingPlayerIndex = (dealerPosition + 1) % players.size();
+            int startingPlayerIndex = getNextActivePlayerIndex(dealerPosition);
             return getCurrentPlayerIndex() == startingPlayerIndex;
         } else {
             int lastRaiserIndex = players.indexOf(lastRaiser);
-            int nextPlayerIndex = (lastRaiserIndex + 1) % players.size();
-            return getCurrentPlayerIndex() == nextPlayerIndex;
+            int nextActivePlayerIndex = getNextActivePlayerIndex(lastRaiserIndex);
+            return getCurrentPlayerIndex() == nextActivePlayerIndex;
         }
     }
+
+    private int getNextActivePlayerIndex(int fromIndex) {
+        int index = fromIndex;
+        int totalPlayers = players.size();
+        int count = 0;
+
+        do {
+            index = (index + 1) % totalPlayers;
+            count++;
+        } while (!players.get(index).getIsActive() && count < totalPlayers);
+
+        return index;
+    }
+
 
     private PokerHand findBestHand(List<Card> cards) {
         PokerHand bestHand = null;
@@ -354,9 +372,11 @@ public class Game {
 
     private void determineWinner() {
         if (isAllFolded) {
+            System.out.println("determineWinner AllFolded");
             List<Player> winners = getUnfoldPlayer();
             if(winners.size() == 1){
                 winners.get(0).addChips(pot);
+                pot = 0;
                 isAllFolded = false;
                 return;
             }
@@ -413,6 +433,11 @@ public class Game {
         lastRaiser = null;
         playerBets.clear();
 
+        if(isAllFolded){
+            currentRound = Round.RIVER;
+            System.out.println("Advancing AllFolded: " + currentRound);
+        }
+
         switch (currentRound) {
             case PREFLOP:
                 currentRound = Round.FLOP;
@@ -435,6 +460,7 @@ public class Game {
                 break;
 
             case SHOWDOWN:
+                System.out.println("SHOWDOWN");
                 startNewHand();
                 break;
         }

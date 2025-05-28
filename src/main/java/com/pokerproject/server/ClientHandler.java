@@ -205,6 +205,7 @@ public class ClientHandler implements Runnable {
                     String[] foldParts = message.split(":", 3);
                     String gameId = foldParts[1];
                     String playerName = foldParts[2];
+                    System.out.println("NEXT GAME TRIGGER " + gameId + " " + playerName);
                     Game game = GameManager.getInstance().getGame(gameId);
                     Player actionPlayer = game.getPlayerByName(playerName);
                     game.processPlayerAction(actionPlayer, Game.Action.NEXT, 0);
