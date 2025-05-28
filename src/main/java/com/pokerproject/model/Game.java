@@ -250,12 +250,12 @@ public class Game {
 
             case RAISE:
                 int playerCurrentBet = getPlayerBet(player);
-                int callAmountRaise = currentBet - playerCurrentBet;
-                int minRaise = callAmountRaise + lastRaiseAmount;
+                // int callAmountRaise = currentBet - playerCurrentBet;
+                // int minRaise = callAmountRaise + lastRaiseAmount;
                 int raiseAmount = amount - playerCurrentBet;
-                if (amount < minRaise || raiseAmount > player.getChips()) {
-                    return false;
-                }
+                // if (amount < minRaise || raiseAmount > player.getChips()) {
+                //     return false;
+                // }
                 lastRaiseAmount = raiseAmount;
                 player.removeChips(raiseAmount);
                 pot += raiseAmount;
@@ -305,29 +305,63 @@ public class Game {
     }
 
     private boolean isRoundComplete() {
+        System.out.println("=== DEBUG isRoundComplete ===");
+        System.out.println("isAllFolded: " + isAllFolded);
+        System.out.println("lastRaiser: " + (lastRaiser != null ? lastRaiser.getName() : "null"));
+        System.out.println("currentPlayerIndex: " + getCurrentPlayerIndex());
+        System.out.println("currentPlayer: " + getCurrentPlayer().getName());
+        
         if (isAllFolded) {
             return true;
         }
 
+        // เช็คว่าทุกคนตอบสนองต่อ current bet แล้วหรือยัง
+        boolean everyoneMatured = hasEveryoneMaturedCurrentBet();
+        System.out.println("everyoneMatured: " + everyoneMatured);
+        
+        if (!everyoneMatured) {
+            System.out.println("Not everyone has matured current bet - continue round");
+            return false;
+        }
+
         if (lastRaiser == null || !lastRaiser.getIsActive()) {
+            System.out.println("No active last raiser");
             int startingPlayerIndex = getNextActivePlayerIndex(dealerPosition);
-            return getCurrentPlayerIndex() == startingPlayerIndex && hasEveryoneMaturedCurrentBet();
+            System.out.println("startingPlayerIndex: " + startingPlayerIndex);
+            boolean positionMatch = getCurrentPlayerIndex() == startingPlayerIndex;
+            System.out.println("positionMatch: " + positionMatch);
+            return positionMatch;
         } else {
+            System.out.println("Active last raiser: " + lastRaiser.getName());
             int lastRaiserIndex = players.indexOf(lastRaiser);
             int nextActivePlayerIndex = getNextActivePlayerIndex(lastRaiserIndex);
-            return getCurrentPlayerIndex() == nextActivePlayerIndex && hasEveryoneMaturedCurrentBet();
+            System.out.println("lastRaiserIndex: " + lastRaiserIndex);
+            System.out.println("nextActivePlayerIndex: " + nextActivePlayerIndex);
+            boolean positionMatch = getCurrentPlayerIndex() == nextActivePlayerIndex;
+            System.out.println("positionMatch: " + positionMatch);
+            return positionMatch;
         }
     }
 
     private boolean hasEveryoneMaturedCurrentBet() {
+        System.out.println("=== DEBUG hasEveryoneMaturedCurrentBet ===");
+        System.out.println("currentBet: " + currentBet);
+        
         for (Player player : players) {
             if (player.getIsActive()) {
                 int playerBetAmount = getPlayerBet(player);
+                System.out.println("Player " + player.getName() + 
+                                " - Bet: " + playerBetAmount + 
+                                " - Chips: " + player.getChips() + 
+                                " - Active: " + player.getIsActive());
+                
                 if (playerBetAmount < currentBet && player.getChips() > 0) {
+                    System.out.println("Player " + player.getName() + " hasn't matured current bet");
                     return false;
                 }
             }
         }
+        System.out.println("Everyone has matured current bet");
         return true;
     }
 
