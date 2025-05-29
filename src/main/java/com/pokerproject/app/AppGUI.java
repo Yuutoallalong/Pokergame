@@ -35,7 +35,6 @@ public class AppGUI {
     private Game currentGame;
     private ClientSocket client;
     private String currentPlayerName;
-    private volatile boolean listeningThreadStarted = false;
     private Thread listeningThread;
 
     public static void main(String[] args) {
@@ -104,11 +103,9 @@ public class AppGUI {
 
         listeningThread.setDaemon(true);
         listeningThread.start();
-        listeningThreadStarted = true;
     }
 
     public void stopListeningFromServer() {
-        listeningThreadStarted = false;
         if (listeningThread != null && listeningThread.isAlive()) {
             listeningThread.interrupt();
             try {
@@ -644,7 +641,7 @@ public class AppGUI {
         if (card == null) {
             path = "/images/cards/card_back.png"; // default card
         } else {
-            String rank = card.getRank().toString().toLowerCase();
+            String rank = card.getValue().toString().toLowerCase();
             String suit = card.getSuit().toString().toLowerCase();
             path = "/images/cards/" + rank + "_of_" + suit + ".png";
         }

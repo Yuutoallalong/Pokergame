@@ -52,7 +52,7 @@ public class PokerHand implements Comparable<PokerHand> {
 
         rankOrder = new ArrayList<>();
         for (Card card : cards) {
-            rankOrder.add(card.getRank());
+            rankOrder.add(card.getValue());
         }
 
         // check handtype from highest
@@ -81,7 +81,7 @@ public class PokerHand implements Comparable<PokerHand> {
 
     // implement
     private boolean isRoyalFlush() {
-        return isStraightFlush() && cards.get(0).getRank() == Rank.ACE;
+        return isStraightFlush() && cards.get(0).getValue() == Rank.ACE;
     }
 
     private boolean isStraightFlush() {
@@ -89,7 +89,7 @@ public class PokerHand implements Comparable<PokerHand> {
     }
 
     private boolean isFourOfAKind() {
-        Map<Rank, Integer> rankCount = getRankCounts();
+        Map<Rank, Integer> rankCount = getValueCounts();
 
         for (Map.Entry<Rank, Integer> entry : rankCount.entrySet()) {
             if (entry.getValue() == 4) {
@@ -98,8 +98,8 @@ public class PokerHand implements Comparable<PokerHand> {
                 rankOrder.add(entry.getKey());
 
                 for (Card card : cards) {
-                    if (card.getRank() != entry.getKey()) {
-                        rankOrder.add(card.getRank());
+                    if (card.getValue() != entry.getKey()) {
+                        rankOrder.add(card.getValue());
                         break;
                     }
                 }
@@ -110,7 +110,7 @@ public class PokerHand implements Comparable<PokerHand> {
     }
 
     private boolean isFullHouse() {
-        Map<Rank, Integer> rankCount = getRankCounts();
+        Map<Rank, Integer> rankCount = getValueCounts();
 
         Rank threeOfAKindRank = null;
         Rank pairRank = null;
@@ -146,7 +146,7 @@ public class PokerHand implements Comparable<PokerHand> {
 
     private boolean isStraight() {
         for (int i = 0; i < cards.size() - 1; i++) {
-            if (cards.get(i).getRank().getValue() != cards.get(i + 1).getRank().getValue() + 1) {
+            if (cards.get(i).getValue().getValue() != cards.get(i + 1).getValue().getValue() + 1) {
                 return false;
             }
         }
@@ -154,7 +154,7 @@ public class PokerHand implements Comparable<PokerHand> {
     }
 
     private boolean isThreeOfAKind() {
-        Map<Rank, Integer> rankCount = getRankCounts();
+        Map<Rank, Integer> rankCount = getValueCounts();
         
         for (Map.Entry<Rank, Integer> entry : rankCount.entrySet()) {
             if (entry.getValue() == 3) {
@@ -164,8 +164,8 @@ public class PokerHand implements Comparable<PokerHand> {
 
                 List<Rank> kickers = new ArrayList<>();
                 for (Card card : cards) {
-                    if (card.getRank() != entry.getKey()) {
-                        kickers.add(card.getRank());
+                    if (card.getValue() != entry.getKey()) {
+                        kickers.add(card.getValue());
                     }
                 }
                 Collections.sort(kickers, Collections.reverseOrder());
@@ -178,7 +178,7 @@ public class PokerHand implements Comparable<PokerHand> {
     }
 
     private boolean isTwoPair() {
-        Map<Rank, Integer> rankCount = getRankCounts();
+        Map<Rank, Integer> rankCount = getValueCounts();
         
         List<Rank> pairs = new ArrayList<>();
         Rank kicker = null;
@@ -204,7 +204,7 @@ public class PokerHand implements Comparable<PokerHand> {
     }
 
     private boolean isPair() {
-        Map<Rank, Integer> rankCount = getRankCounts();
+        Map<Rank, Integer> rankCount = getValueCounts();
         
         for (Map.Entry<Rank, Integer> entry : rankCount.entrySet()) {
             if (entry.getValue() == 2) {
@@ -213,8 +213,8 @@ public class PokerHand implements Comparable<PokerHand> {
                 
                 List<Rank> kickers = new ArrayList<>();
                 for (Card card : cards) {
-                    if (card.getRank() != entry.getKey()) {
-                        kickers.add(card.getRank());
+                    if (card.getValue() != entry.getKey()) {
+                        kickers.add(card.getValue());
                     }
                 }
                 Collections.sort(kickers, Collections.reverseOrder());
@@ -226,12 +226,12 @@ public class PokerHand implements Comparable<PokerHand> {
         return false;
     }
 
-    // implement getRankCounts
-    private Map<Rank, Integer> getRankCounts() {
+    // implement getValueCounts
+    private Map<Rank, Integer> getValueCounts() {
         Map<Rank, Integer> rankCount = new HashMap<>();
 
         for (Card card : cards) {
-            Rank rank = card.getRank();
+            Rank rank = card.getValue();
             rankCount.put(rank, rankCount.getOrDefault(rank, 0) + 1);
         }
         return rankCount;
