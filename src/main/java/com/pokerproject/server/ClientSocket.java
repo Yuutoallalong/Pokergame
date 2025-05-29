@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 public class ClientSocket {
+
     private final Socket socket;
     private final BufferedReader in;
     private final PrintWriter out;
@@ -29,4 +30,3 @@ public class ClientSocket {
         socket.close();
     }
 }
-

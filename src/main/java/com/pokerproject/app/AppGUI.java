@@ -69,13 +69,11 @@ public class AppGUI {
                         // System.out.println("ClientSide: " +
                         // currentGame.getCurrentPlayer().getName());
                         SwingUtilities.invokeLater(() -> {
-                            // หา game panel และลบออก
                             for (int i = 0; i < mainPanel.getComponentCount(); i++) {
                                 Component comp = mainPanel.getComponent(i);
                                 if (comp instanceof JPanel) {
-                                    // ใช้ index ของ Game panel (ควรเป็น index 2)
                                     try {
-                                        mainPanel.remove(2); // Game panel index
+                                        mainPanel.remove(2);
                                         break;
                                     } catch (ArrayIndexOutOfBoundsException e) {
                                         break;
@@ -89,17 +87,13 @@ public class AppGUI {
                             mainPanel.revalidate();
                             mainPanel.repaint();
                         });
-                    } else if (message.startsWith("LEAVE_GAME_SUCCESS")) {
-                        // รับ confirmation จาก server ว่า leave สำเร็จ
-                        System.out.println("Leave game confirmed by server");
-                    } else if(message.startsWith("END")){
-                        
+                    } else if (message.startsWith("END")) {
+
                         Window window = SwingUtilities.getWindowAncestor(mainPanel);
                         if (window != null) {
                             window.dispose();
                         }
                     }
-                    // else handle ข้อความอื่น ๆ
                 }
             } catch (IOException e) {
                 if (!Thread.currentThread().isInterrupted()) {
@@ -118,7 +112,7 @@ public class AppGUI {
         if (listeningThread != null && listeningThread.isAlive()) {
             listeningThread.interrupt();
             try {
-                listeningThread.join(1000); // รอ 1 วินาที
+                listeningThread.join(1000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
@@ -219,32 +213,27 @@ public class AppGUI {
                     currentPlayerName = playerName;
                     currentGame = gson.fromJson(gameInfo, Game.class);
 
-                    // ลบ game panel เก่า
                     try {
                         mainPanel.remove(2);
                     } catch (Exception ex) {
-                        // ignore
                     }
 
                     JPanel gamePage = createGamePage();
                     mainPanel.add(gamePage, "Game");
                     cardLayout.show(mainPanel, "Game");
 
-                    // เริ่ม listening thread
                     startListeningFromServer();
                 }
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null, "Failed to connect to server.");
                 ex.printStackTrace();
 
-                // ปิด connection ที่มีปัญหา
                 try {
                     if (client != null) {
                         client.close();
                         client = null;
                     }
                 } catch (Exception closeEx) {
-                    // ignore
                 }
             }
         });
@@ -272,11 +261,10 @@ public class AppGUI {
             }
             if (roomId != null && !roomId.isEmpty()) {
                 try {
-                    // สร้าง connection ใหม่หรือใช้ connection เดิม
                     if (client == null) {
                         client = new ClientSocket("localhost", 12345);
                     }
-                    
+
                     client.sendMessage("JOIN:" + playerName + ":" + roomId);
                     String response = client.readMessage();
                     String gameInfo = client.readMessage();
@@ -288,24 +276,20 @@ public class AppGUI {
                         currentPlayerName = playerName;
                         currentGame = gson.fromJson(gameInfo, Game.class);
 
-                        // ลบ game panel เก่าออก (ถ้ามี)
                         try {
-                            mainPanel.remove(2); // Game panel อยู่ที่ index 2
+                            mainPanel.remove(2);
                         } catch (Exception ex) {
-                            // ไม่ต้องทำอะไรถ้าไม่มี panel
                         }
 
                         JPanel gamePage = createGamePage();
                         mainPanel.add(gamePage, "Game");
                         cardLayout.show(mainPanel, "Game");
 
-                        // เริ่ม listening thread ใหม่
                         startListeningFromServer();
 
-                        // ซ่อน join fields
                         roomField.setVisible(false);
                         confirmJoinButton.setVisible(false);
-                        roomField.setText(""); // เคลียร์ field
+                        roomField.setText("");
                         panel.revalidate();
                         panel.repaint();
                     }
@@ -313,14 +297,12 @@ public class AppGUI {
                     ex.printStackTrace();
                     JOptionPane.showMessageDialog(null, "Failed to join game: " + ex.getMessage());
 
-                    // ปิด connection ที่มีปัญหาและสร้างใหม่
                     try {
                         if (client != null) {
                             client.close();
                             client = null;
                         }
                     } catch (Exception closeEx) {
-                        // ignore
                     }
                 }
             }
@@ -343,22 +325,10 @@ public class AppGUI {
         return panel;
     }
 
-    public void closeConnection() {
-        try {
-            stopListeningFromServer();
-            if (client != null) {
-                client.close();
-                client = null;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     private JPanel createGamePage() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(new Color(34, 45, 65)); // Dark poker table theme
+        panel.setBackground(new Color(34, 45, 65));
         JButton startButton = new JButton("Start Game");
         JLabel tableLabel = new JLabel("Poker Game");
         tableLabel.setForeground(Color.WHITE);
@@ -423,14 +393,14 @@ public class AppGUI {
                     labelMessage += " (You)";
                 }
 
-                if(currentGame.getWinner() != null && player.getName().equals(currentGame.getWinner().getName())){
+                if (currentGame.getWinner() != null && player.getName().equals(currentGame.getWinner().getName())) {
                     labelMessage += "🥇";
                 }
 
                 JLabel playerLabel = new JLabel(labelMessage);
 
                 if (player.getName().equals(currentPlayerName)) {
-                    playerLabel.setForeground(new Color(255, 215, 0)); 
+                    playerLabel.setForeground(new Color(255, 215, 0));
                     playerLabel.setFont(playerLabel.getFont().deriveFont(Font.BOLD, 14f));
                 } else {
                     playerLabel.setForeground(Color.WHITE);
@@ -445,11 +415,11 @@ public class AppGUI {
                 JLabel card1 = null;
                 JLabel card2 = null;
                 if (currentGame.getState() == Game.State.PLAYING) {
-                    if (currentGame.getCurrentRound() == Game.Round.SHOWDOWN) {             
+                    if (currentGame.getCurrentRound() == Game.Round.SHOWDOWN) {
                         if (player.getName().equals(currentPlayerName) || player.getName().equals(currentGame.getWinner().getName())) {
                             if (player.getHoleCards() != null && player.getHoleCards().size() >= 2) {
                                 card1 = new JLabel(loadCardImage(player.getHoleCards().get(0)));
-                                card2 = new JLabel(loadCardImage(player.getHoleCards().get(1)));        
+                                card2 = new JLabel(loadCardImage(player.getHoleCards().get(1)));
                             } else {
                                 card1 = new JLabel(loadCardImage(null));
                                 card2 = new JLabel(loadCardImage(null));
@@ -461,9 +431,8 @@ public class AppGUI {
 
                         playerRow.add(card1);
                         playerRow.add(card2);
-                        
+
                     } else {
-                        // รอบปกติ แสดงไพ่ของตัวเองเท่านั้น
                         if (player.getName().equals(currentPlayerName)) {
                             card1 = new JLabel(loadCardImage(player.getHoleCards().get(0)));
                             card2 = new JLabel(loadCardImage(player.getHoleCards().get(1)));
@@ -481,11 +450,13 @@ public class AppGUI {
 
                 playerRow.add(playerLabel);
                 playerRow.add(Box.createHorizontalStrut(10));
-                if (currentGame.getState() == Game.State.PLAYING && card1 != null)
+                if (currentGame.getState() == Game.State.PLAYING && card1 != null) {
                     playerRow.add(card1);
+                }
                 playerRow.add(Box.createHorizontalStrut(10));
-                if (currentGame.getState() == Game.State.PLAYING && card2 != null)
+                if (currentGame.getState() == Game.State.PLAYING && card2 != null) {
                     playerRow.add(card2);
+                }
                 playerRow.add(Box.createHorizontalGlue());
                 playerRow.add(chips);
 
@@ -520,8 +491,8 @@ public class AppGUI {
         JButton nextGameButton = new JButton("Next game");
         JButton exitGameButton = new JButton("Exit game");
 
-        JButton[] buttons = { foldButton, raiseButton, checkButton, betButton, nextGameButton, exitGameButton,
-                startButton };
+        JButton[] buttons = {foldButton, raiseButton, checkButton, betButton, nextGameButton, exitGameButton,
+            startButton};
         for (JButton btn : buttons) {
             btn.setBackground(new Color(70, 130, 180));
             btn.setForeground(Color.WHITE);
@@ -576,6 +547,7 @@ public class AppGUI {
 
         // ======= Action Buttons Listener =======
         if (currentGame != null) {
+
             callButton.addActionListener(e -> {
                 int callAmount = currentGame.getCurrentBet()
                         - currentGame.getPlayerBet(currentGame.getPlayerByName(currentPlayerName));
@@ -584,8 +556,10 @@ public class AppGUI {
                 }
                 client.sendMessage("CALL:" + currentGame.getGameId() + ":" + currentPlayerName + ":" + callAmount);
             });
+
             foldButton.addActionListener(
                     e -> client.sendMessage("FOLD:" + currentGame.getGameId() + ":" + currentPlayerName));
+
             raiseButton.addActionListener(e -> {
                 String raiseAmount = JOptionPane.showInputDialog("Raise: ");
                 int raiseAmountInt = 0;
@@ -594,19 +568,21 @@ public class AppGUI {
                 } catch (NumberFormatException err) {
                     JOptionPane.showMessageDialog(null, "Please enter a valid number!");
                 }
-                if(raiseAmountInt <= 0) {
+                if (raiseAmountInt <= 0) {
                     JOptionPane.showMessageDialog(null, "Raise amount must be greater than 0.");
-                }else if(raiseAmountInt > currentGame.getPlayerByName(currentPlayerName).getChips()) {
+                } else if (raiseAmountInt > currentGame.getPlayerByName(currentPlayerName).getChips()) {
                     JOptionPane.showMessageDialog(null, "You don't have enough chips.");
-                }else if (raiseAmountInt > currentGame.getCurrentBet()) {
+                } else if (raiseAmountInt > currentGame.getCurrentBet()) {
                     JOptionPane.showMessageDialog(null, "Raise amount must be greater than current bet " + currentGame.getCurrentBet());
-                }else{
+                } else {
                     client.sendMessage("RAISE:" + currentGame.getGameId() + ":" + currentPlayerName + ":" + raiseAmount);
                 }
-                
+
             });
+
             checkButton.addActionListener(
                     e -> client.sendMessage("CHECK:" + currentGame.getGameId() + ":" + currentPlayerName));
+
             betButton.addActionListener(e -> {
                 String betAmount = JOptionPane.showInputDialog("Bet: ");
                 int betAmountInt = 0;
@@ -615,14 +591,15 @@ public class AppGUI {
                 } catch (NumberFormatException err) {
                     JOptionPane.showMessageDialog(null, "Please enter a valid number!");
                 }
-                if(betAmountInt <= 0) {
+                if (betAmountInt <= 0) {
                     JOptionPane.showMessageDialog(null, "Bet amount must be greater than 0.");
-                }else if(betAmountInt > currentGame.getPlayerByName(currentPlayerName).getChips()) {
+                } else if (betAmountInt > currentGame.getPlayerByName(currentPlayerName).getChips()) {
                     JOptionPane.showMessageDialog(null, "You don't have enough chips.");
-                }else{
+                } else {
                     client.sendMessage("BET:" + currentGame.getGameId() + ":" + currentPlayerName + ":" + betAmount);
                 }
             });
+
             nextGameButton.addActionListener(
                     e -> client.sendMessage("NEXTGAME:" + currentGame.getGameId() + ":" + currentPlayerName));
         }

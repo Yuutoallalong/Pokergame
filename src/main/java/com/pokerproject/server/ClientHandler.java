@@ -90,17 +90,13 @@ public class ClientHandler implements Runnable {
                     continue;
                 }
 
-                // คำสั่งอื่น ๆ ต้องตรวจสอบว่า player ถูกสร้างแล้วก่อนใช้งาน
                 if (player == null) {
                     out.println("You must JOIN or CREATE a game first.");
                     out.println("");
                     continue;
                 }
 
-                if (message.equalsIgnoreCase("exit")) {
-                    out.println("Goodbye!");
-                    break;
-                } else if (message.startsWith("LEAVE_GAME:")) {
+                if (message.startsWith("LEAVE_GAME:")) {
                     String[] exitParts = message.split(":", 3);
                     if (exitParts.length < 3) {
                         out.println("Invalid LEAVE_GAME command format.");
@@ -208,7 +204,7 @@ public class ClientHandler implements Runnable {
                     String gameJsonFold = gson.toJson(game);
                     broadcastToGame("UPDATE_GAME:" + gameJsonFold);
                     continue;
-                } 
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -235,7 +231,6 @@ public class ClientHandler implements Runnable {
 
     private void broadcastToGame(String message) {
         if (currentGame != null) {
-            // สร้าง list copy เพื่อป้องกัน ConcurrentModificationException
             List<Player> playersCopy = new ArrayList<>(currentGame.getPlayers());
             for (Player p : playersCopy) {
                 try {
@@ -256,7 +251,6 @@ public class ClientHandler implements Runnable {
             in.close();
             out.close();
             clientSocket.close();
-            // System.out.println("Client disconnected");
         } catch (IOException e) {
             e.printStackTrace();
         }

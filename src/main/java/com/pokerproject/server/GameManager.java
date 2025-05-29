@@ -9,11 +9,13 @@ import com.pokerproject.model.JoinGameResult;
 import com.pokerproject.model.Player;
 
 public class GameManager {
+
     private static GameManager instance;
     private final Map<String, Game> games = new HashMap<>();
     private final Random random = new Random();
 
-    private GameManager() {}
+    private GameManager() {
+    }
 
     public static synchronized GameManager getInstance() {
         if (instance == null) {
@@ -31,14 +33,13 @@ public class GameManager {
         return sb.toString();
     }
 
-
     public synchronized Game createGame(Player player) {
         String gameId;
         do {
             gameId = generateRandomGameId();
         } while (games.containsKey(gameId));
 
-        Game game = new Game(gameId,50,100);
+        Game game = new Game(gameId, 50, 100);
         game.addPlayer(player);
         games.put(gameId, game);
         // System.out.println("Created new game with random ID: " + gameId);
