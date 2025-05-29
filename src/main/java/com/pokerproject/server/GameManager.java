@@ -41,7 +41,7 @@ public class GameManager {
         Game game = new Game(gameId,50,100);
         game.addPlayer(player);
         games.put(gameId, game);
-        System.out.println("Created new game with random ID: " + gameId);
+        // System.out.println("Created new game with random ID: " + gameId);
         return game;
     }
 
@@ -53,17 +53,14 @@ public class GameManager {
 
         boolean added = game.addPlayer(player);
         if (added) {
-            System.out.println("Player joined game: " + gameId);
             return new JoinGameResult(game, null);
         } else {
-            System.out.println("Game is full: " + gameId);
             return new JoinGameResult(null, "Game id: " + gameId + " is full.");
         }
     }
 
     public synchronized void removeGame(String gameId) {
         games.remove(gameId);
-        System.out.println("Game removed: " + gameId);
     }
 
     public synchronized Game getGame(String gameId) {

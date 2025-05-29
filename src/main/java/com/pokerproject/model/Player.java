@@ -6,16 +6,18 @@ import java.util.List;
 import com.pokerproject.server.ClientHandler;
 
 public class Player {
-    private String name;
-    private List<Card> holeCards;
+    private final String name;
+    private final List<Card> holeCards;
     private int chips;
     private boolean isDealer;
     private boolean isSmallBlind;
     private boolean isBigBlind;
     private boolean isActive; //current player
-    private transient ClientHandler handler;
+    private final transient ClientHandler handler;
+
+    public boolean isCreater;
     
-    public Player(String name, ClientHandler handler) {
+    public Player(String name, ClientHandler handler, boolean isCreater) {
         this.name = name;
         this.handler = handler;
         this.chips = 1000;
@@ -24,6 +26,7 @@ public class Player {
         this.isSmallBlind = false;
         this.isBigBlind = false;
         this.isActive = true;
+        this.isCreater = isCreater;
     }
 
     public ClientHandler getHandler() {
@@ -86,11 +89,11 @@ public class Player {
         this.isBigBlind = bigBlind;
     }
     
-    public boolean isActive() {
+    public boolean getIsActive() {
         return isActive;
     }
     
-    public void setActive(boolean active) {
+    public void setIsActive(boolean active) {
         this.isActive = active;
     }
 
