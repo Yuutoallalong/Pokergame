@@ -18,11 +18,6 @@ public class Card implements Comparable<Card>{
     }
 
     @Override
-    public String toString() {
-        return rank.toString() + suit.getSymbol();
-    }
-
-    @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;

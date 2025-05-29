@@ -562,6 +562,7 @@ public class AppGUI {
                 int raiseAmountInt = 0;
                 try {
                     raiseAmountInt = Integer.parseInt(raiseAmount);
+                    
                 } catch (NumberFormatException err) {
                     JOptionPane.showMessageDialog(null, "Please enter a valid number!");
                 }
@@ -569,7 +570,7 @@ public class AppGUI {
                     JOptionPane.showMessageDialog(null, "Raise amount must be greater than 0.");
                 } else if (raiseAmountInt > currentGame.getPlayerByName(currentPlayerName).getChips()) {
                     JOptionPane.showMessageDialog(null, "You don't have enough chips.");
-                } else if (raiseAmountInt > currentGame.getCurrentBet()) {
+                } else if (raiseAmountInt <= currentGame.getCurrentBet()) {
                     JOptionPane.showMessageDialog(null, "Raise amount must be greater than current bet " + currentGame.getCurrentBet());
                 } else {
                     client.sendMessage("RAISE:" + currentGame.getGameId() + ":" + currentPlayerName + ":" + raiseAmount);
