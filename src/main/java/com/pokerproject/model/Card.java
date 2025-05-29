@@ -9,7 +9,7 @@ public class Card implements Comparable<Card>{
         this.suit = suit;
     }
 
-    public Rank getRank() {
+    public Rank getValue() {
         return rank;
     }
 

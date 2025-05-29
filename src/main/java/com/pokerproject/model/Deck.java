@@ -35,14 +35,6 @@ public class Deck {
         return cards.remove(0);
     }
 
-    public synchronized List<Card> dealCards(int count) {
-        List<Card> dealtCards = new ArrayList<>(count);
-        for (int i = 0; i < count && !cards.isEmpty(); i++) {
-            dealtCards.add(dealCard());
-        }
-        return dealtCards;
-    }
-
     public synchronized void dealCardsFromPosition(List<Player> players, int startingPlayerIndex, int cardsPerPlayer) {
         if (players == null || players.isEmpty()) {
             return;
@@ -68,34 +60,7 @@ public class Deck {
         }
     }
 
-    public synchronized int remainingCards() {
-        return cards.size();
-    }
-
     public synchronized void reset() {
         initializeDeck();
-    }
-
-    public synchronized void returnCard(Card card) {
-        if (card != null) {
-            cards.add(card);
-        }
-    }
-
-    @Override
-    public String toString() {
-        return "Deck: " + cards.size() + " cards remaining";
-    }
-
-    public synchronized List<Card> dealCommunityCards(int count) {
-        return dealCards(count);
-    }
-
-    public synchronized boolean isEmpty() {
-        return cards.isEmpty();
-    }
-
-    public synchronized Card burnCard() {
-        return dealCard();
     }
 }

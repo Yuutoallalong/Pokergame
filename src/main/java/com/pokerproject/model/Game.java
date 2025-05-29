@@ -389,10 +389,6 @@ public class Game {
         return players.get(currentPlayerIndex);
     }
 
-    public Round getCurrentRound() {
-        return currentRound;
-    }
-
     public List<Card> getCommunityCards() {
         return new ArrayList<>(communityCards);
     }

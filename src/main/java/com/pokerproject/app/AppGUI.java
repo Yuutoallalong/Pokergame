@@ -454,7 +454,7 @@ public class AppGUI {
         if (card == null) {
             path = "/images/cards/2_of_clubs.png";  // default card
         } else {
-            String rank = card.getRank().toString().toLowerCase();
+            String rank = card.getValue().toString().toLowerCase();
             String suit = card.getSuit().toString().toLowerCase();
             path = "/images/cards/" + rank + "_of_" + suit + ".png";
         }
