@@ -36,6 +36,7 @@ public class AppGUI {
     private ClientSocket client;
     private String currentPlayerName;
     private Thread listeningThread;
+    private final int MIN_PLAYERS = 2;
 
     public static void main(String[] args) {
         new AppGUI().createAndShowGUI();
@@ -467,7 +468,7 @@ public class AppGUI {
         buttonPanel.setBackground(new Color(34, 45, 65));
 
         if (currentGame != null && currentGame.getCreaterPlayer().getName().equals(currentPlayerName)
-                && currentGame.getPlayers().size() > 1) {
+                && currentGame.getPlayers().size() > MIN_PLAYERS) {
             if (currentGame.getState() == Game.State.PLAYING) {
                 startButton.setEnabled(false);
             }

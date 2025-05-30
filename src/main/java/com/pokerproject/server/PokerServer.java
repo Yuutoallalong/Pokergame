@@ -25,7 +25,7 @@ public class PokerServer {
 
                 ClientHandler handler = new ClientHandler(clientSocket);
 
-                // create a new thread to handle the client
+                // submit the handler task to the thread pool
                 threadPool.submit(() -> {
                     System.out.println("Running handler in thread: " + Thread.currentThread().getName());
                     handler.run();
