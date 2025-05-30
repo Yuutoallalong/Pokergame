@@ -82,7 +82,7 @@ public class ClientHandler implements Runnable {
                         out.println("");
                         continue;
                     }
-                    // System.out.println("JOIN GAME: " + currentGame);
+
                     String gameJson = gson.toJson(currentGame);
                     out.println("Joined game: " + gameId);
                     out.println(gameJson);
@@ -197,7 +197,6 @@ public class ClientHandler implements Runnable {
                     String[] nextParts = message.split(":", 3);
                     String gameId = nextParts[1];
                     String playerName = nextParts[2];
-                    System.out.println("NEXT GAME TRIGGER " + gameId + " " + playerName);
                     Game game = GameManager.getInstance().getGame(gameId);
                     Player actionPlayer = game.getPlayerByName(playerName);
                     game.processPlayerAction(actionPlayer, Game.Action.NEXT, 0);
@@ -209,7 +208,6 @@ public class ClientHandler implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         } catch (Exception e) {
-            // System.out.println(e);
         } finally {
             cleanup();
         }

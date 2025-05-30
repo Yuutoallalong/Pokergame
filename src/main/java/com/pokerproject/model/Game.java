@@ -206,7 +206,6 @@ public class Game {
 
     public boolean processPlayerAction(Player player, Action action, int amount) {
         if (player != getCurrentPlayer() && action != Action.NEXT) {
-            System.out.println("Player " + player.getName() + " is not the current player.");
             return false;
         }
 
@@ -246,7 +245,6 @@ public class Game {
                 lastRaiser = player;
                 break;
             case NEXT:
-                System.out.println("IN CASE NEXT");
                 break;
         }
 
@@ -264,9 +262,6 @@ public class Game {
     }
 
     private void moveToNextPlayer() {
-        System.out.println("moveToNextPlayer");
-        System.out.println("currentPlayerIndexBefore: " + getCurrentPlayerIndex());
-        System.out.println("getCurrentPlayerBefore: " + getCurrentPlayer());
 
         if (getUnfoldPlayer().size() <= 1) {
             isAllFolded = true;
@@ -280,69 +275,44 @@ public class Game {
             this.setCurrentPlayerIndex((getCurrentPlayerIndex() + 1) % totalPlayers);
             count++;
         } while (!players.get(getCurrentPlayerIndex()).getIsActive() && count < totalPlayers);
-
-        System.out.println("currentPlayerIndexAfter: " + getCurrentPlayerIndex());
-        System.out.println("getCurrentPlayerAfter: " + getCurrentPlayer());
     }
 
     private boolean isRoundComplete() {
-        System.out.println("=== DEBUG isRoundComplete ===");
-        System.out.println("isAllFolded: " + isAllFolded);
-        System.out.println("lastRaiser: " + (lastRaiser != null ? lastRaiser.getName() : "null"));
-        System.out.println("currentPlayerIndex: " + getCurrentPlayerIndex());
-        System.out.println("currentPlayer: " + getCurrentPlayer().getName());
-        
+
         if (isAllFolded) {
             return true;
         }
 
         // เช็คว่าทุกคนตอบสนองต่อ current bet แล้วหรือยัง
         boolean everyoneMatured = hasEveryoneMaturedCurrentBet();
-        System.out.println("everyoneMatured: " + everyoneMatured);
         
         if (!everyoneMatured) {
-            System.out.println("Not everyone has matured current bet - continue round");
             return false;
         }
 
         if (lastRaiser == null || !lastRaiser.getIsActive()) {
-            System.out.println("No active last raiser");
             int startingPlayerIndex = getNextActivePlayerIndex(dealerPosition);
-            System.out.println("startingPlayerIndex: " + startingPlayerIndex);
             boolean positionMatch = getCurrentPlayerIndex() == startingPlayerIndex;
-            System.out.println("positionMatch: " + positionMatch);
             return positionMatch;
         } else {
-            System.out.println("Active last raiser: " + lastRaiser.getName());
             int lastRaiserIndex = players.indexOf(lastRaiser);
             int nextActivePlayerIndex = getNextActivePlayerIndex(lastRaiserIndex);
-            System.out.println("lastRaiserIndex: " + lastRaiserIndex);
-            System.out.println("nextActivePlayerIndex: " + nextActivePlayerIndex);
             boolean positionMatch = getCurrentPlayerIndex() == nextActivePlayerIndex;
-            System.out.println("positionMatch: " + positionMatch);
             return positionMatch;
         }
     }
 
     private boolean hasEveryoneMaturedCurrentBet() {
-        System.out.println("=== DEBUG hasEveryoneMaturedCurrentBet ===");
-        System.out.println("currentBet: " + currentBet);
         
         for (Player player : players) {
             if (player.getIsActive()) {
                 int playerBetAmount = getPlayerBet(player);
-                System.out.println("Player " + player.getName() + 
-                                " - Bet: " + playerBetAmount + 
-                                " - Chips: " + player.getChips() + 
-                                " - Active: " + player.getIsActive());
                 
                 if (playerBetAmount < currentBet && player.getChips() > 0) {
-                    System.out.println("Player " + player.getName() + " hasn't matured current bet");
                     return false;
                 }
             }
         }
-        System.out.println("Everyone has matured current bet");
         return true;
     }
 
@@ -401,13 +371,11 @@ public class Game {
         this.winner = null;
         
         if (isAllFolded) {
-            System.out.println("determineWinner AllFolded");
             List<Player> winners = getUnfoldPlayer();
             if(winners.size() == 1){
                 winners.get(0).addChips(pot);
                 pot = 0;
                 this.winner = winners.get(0);
-                System.out.println("Winner (all folded): " + this.winner.getName());
                 isAllFolded = false;
                 return;
             }
@@ -458,7 +426,6 @@ public class Game {
             
         pot = 0;
 
-        System.out.println("Final winner determined: " + (this.winner != null ? this.winner.getName() : "null"));
         }
     }
 
@@ -495,24 +462,19 @@ public class Game {
                 break;
 
             case SHOWDOWN:
-                System.out.println("SHOWDOWN");
                 startNewHand();
                 break;
         }
 
         if (currentRound != Round.SHOWDOWN) {
-            System.out.println("currentPlayerIndex in advanceToNextRound before: " + currentPlayerIndex);
             setCurrentPlayerIndex((dealerPosition + 1) % players.size());
-            System.out.println("currentPlayerIndex in advanceToNextRound after: " + currentPlayerIndex);
             int totalPlayers = players.size();
             int count = 0;
 
             // หา player ที่ active คนถัดไป
-            while (!players.get(getCurrentPlayerIndex()).getIsActive() && count < totalPlayers) {
-                System.out.println("currentPlayerIndex in advanceToNextRound LOOP before: " + currentPlayerIndex);
+            while (!players.get(getCurrentPlayerIndex()).getIsActive() && count < totalPlayers) {;
                 setCurrentPlayerIndex((getCurrentPlayerIndex() + 1) % totalPlayers);
                 count++;
-                System.out.println("currentPlayerIndex in advanceToNextRound LOOP after: " + currentPlayerIndex);
             }
         }
     }

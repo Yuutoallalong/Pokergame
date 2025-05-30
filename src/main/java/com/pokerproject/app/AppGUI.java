@@ -61,13 +61,11 @@ public class AppGUI {
             try {
                 String message;
                 while ((message = client.readMessage()) != null && !Thread.currentThread().isInterrupted()) {
-                    // System.out.println("Received message: " + message); // Debug
+                    // System.out.println("Received message: " + message);
 
                     if (message.startsWith("UPDATE_GAME:")) {
                         String gameJson = message.substring("UPDATE_GAME:".length());
                         currentGame = gson.fromJson(gameJson, Game.class);
-                        // System.out.println("ClientSide: " +
-                        // currentGame.getCurrentPlayer().getName());
                         SwingUtilities.invokeLater(() -> {
                             for (int i = 0; i < mainPanel.getComponentCount(); i++) {
                                 Component comp = mainPanel.getComponent(i);
@@ -267,7 +265,6 @@ public class AppGUI {
                     String response = client.readMessage();
                     String gameInfo = client.readMessage();
 
-                    // System.out.println("Join response: " + response);
                     JOptionPane.showMessageDialog(null, response);
 
                     if (response.startsWith("Joined game") && !"".equals(gameInfo)) {

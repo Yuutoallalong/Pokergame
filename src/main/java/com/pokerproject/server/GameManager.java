@@ -42,7 +42,6 @@ public class GameManager {
         Game game = new Game(gameId, 50, 100);
         game.addPlayer(player);
         games.put(gameId, game);
-        // System.out.println("Created new game with random ID: " + gameId);
         return game;
     }
 
